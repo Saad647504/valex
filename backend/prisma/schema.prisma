@@ -1,15 +1,165 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  username    String   @unique
+  firstName   String
+  lastName    String
+  password    String
+  avatar      String?
+  role        Role     @default(DEVELOPER)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ownedProjects    Project[]     @relation("ProjectOwner")
+  projectMembers   ProjectMember[]
+  assignedTasks    Task[]        @relation("TaskAssignee")
+  createdTasks     Task[]        @relation("TaskCreator")
+  comments         Comment[]
+  timeEntries      TimeEntry[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  key         String   @unique
+  color       String   @default("#3B82F6")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       User            @relation("ProjectOwner", fields: [ownerId], references: [id])
+  ownerId     String
+  members     ProjectMember[]
+  columns     Column[]
+  tasks       Task[]
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  role      ProjectRole @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+
+  @@unique([userId, projectId])
+  @@map("project_members")
+}
+
+model Column {
+  id        String  @id @default(cuid())
+  name      String
+  position  Int
+  color     String  @default("#6B7280")
+  isDefault Boolean @default(false)
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  tasks     Task[]
+
+  @@map("columns")
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  key         String     @unique
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  position    Float
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  column      Column      @relation(fields: [columnId], references: [id])
+  columnId    String
+  assignee    User?       @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assigneeId  String?
+  creator     User        @relation("TaskCreator", fields: [creatorId], references: [id])
+  creatorId   String
+  
+  comments    Comment[]
+  timeEntries TimeEntry[]
+
+  @@map("tasks")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task     Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId   String
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+
+  @@map("comments")
+}
+
+model TimeEntry {
+  id          String    @id @default(cuid())
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?
+  createdAt   DateTime  @default(now())
+
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  @@map("time_entries")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  DEVELOPER
+}
+
+enum ProjectRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }

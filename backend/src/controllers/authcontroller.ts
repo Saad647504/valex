@@ -1,4 +1,3 @@
-// backend/src/controllers/authController.ts
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { hashPassword, comparePasswords, generateToken } from '../utils/auth';

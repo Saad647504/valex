@@ -1,4 +1,3 @@
-// backend/src/middleware/auth.ts
 import { Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/auth';
 import { AuthenticatedRequest } from '../types/auth';

@@ -1,4 +1,3 @@
-// backend/src/controllers/taskController.ts
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/auth';

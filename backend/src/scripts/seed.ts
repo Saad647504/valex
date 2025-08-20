@@ -1,4 +1,3 @@
-// backend/src/scripts/seed.ts
 // This creates sample data for development
 
 import { PrismaClient } from '@prisma/client';
@@ -9,7 +8,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seed...');
 
-  // create sample users
+  // create sample users (John the dev and Sarah the mnger)
   const hashedPassword = await bcrypt.hash('password123', 10);
   
   const john = await prisma.user.create({
@@ -49,7 +48,7 @@ async function main() {
 
   console.log('📁 Created project:', project.name);
 
-  // John (project manager)
+  // John (now a project member)
   await prisma.projectMember.create({
     data: {
       userId: john.id,

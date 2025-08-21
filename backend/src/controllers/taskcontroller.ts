@@ -76,6 +76,15 @@ export const createTask = async (req: AuthenticatedRequest, res: Response): Prom
       }
     });
 
+    // Emit real-time update to all users in this project
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`project:${projectId}`).emit('task-created', {
+        task,
+        columnId
+      });
+    }
+
     res.status(201).json({ task, message: 'Task created successfully' });
 
   } catch (error) {
@@ -84,7 +93,7 @@ export const createTask = async (req: AuthenticatedRequest, res: Response): Prom
   }
 };
 
-// Update task (for drag and drop)
+// Update task (for editing)
 export const updateTask = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.userId!;
@@ -128,14 +137,95 @@ export const updateTask = async (req: AuthenticatedRequest, res: Response): Prom
             lastName: true,
             email: true
           }
-        }
+        },
+        project: true
       }
     });
+
+    // Emit real-time update
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`project:${task.projectId}`).emit('task-updated', {
+        task
+      });
+    }
 
     res.json({ task, message: 'Task updated successfully' });
 
   } catch (error) {
     console.error('Update task error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Move task (for drag & drop)
+export const moveTask = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId!;
+    const { id } = req.params;
+    const { columnId, position, fromColumn } = req.body;
+
+    // Verify user has access to this task
+    const existingTask = await prisma.task.findFirst({
+      where: {
+        id,
+        project: {
+          OR: [
+            { ownerId: userId },
+            { members: { some: { userId } } }
+          ]
+        }
+      }
+    });
+
+    if (!existingTask) {
+      res.status(404).json({ error: 'Task not found' });
+      return;
+    }
+
+    const task = await prisma.task.update({
+      where: { id },
+      data: {
+        columnId,
+        position
+      },
+      include: {
+        project: true,
+        assignee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    // Emit real-time update
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`project:${task.projectId}`).emit('task-moved', {
+        taskId: id,
+        fromColumn,
+        toColumn: columnId,
+        position,
+        task
+      });
+    }
+
+    res.json({ task, message: 'Task moved successfully' });
+
+  } catch (error) {
+    console.error('Move task error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

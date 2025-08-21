@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from './authcontext';
+import { useSocket } from '@/hooks/usesocket';
 
 interface Project {
   id: string;
@@ -81,6 +82,32 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(false);
   const { token } = useAuth();
+  // Add WebSocket integration
+  const { joinProject, leaveProject, onTaskCreated, onTaskMoved } = useSocket();
+
+  // Listen for real-time task updates
+  useEffect(() => {
+    onTaskCreated((data) => {
+      if (currentProject && currentProject.id === data.task.projectId) {
+        // Refresh the current project to show new task
+        loadProject(currentProject.id);
+      }
+    });
+
+    onTaskMoved((data) => {
+      if (currentProject && currentProject.id === data.task.projectId) {
+        // Refresh the current project to show moved task
+        loadProject(currentProject.id);
+      }
+    });
+  }, [currentProject]);
+
+  // Join project room when viewing a project
+  useEffect(() => {
+    if (currentProject) {
+      joinProject(currentProject.id);
+    }
+  }, [currentProject]);
 
   const loadProjects = async () => {
     if (!token) return;

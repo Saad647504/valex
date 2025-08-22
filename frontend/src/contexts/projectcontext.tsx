@@ -71,6 +71,7 @@ interface CreateTaskData {
   projectId: string;
   columnId: string;
   priority: string;
+  useAI?: boolean;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);

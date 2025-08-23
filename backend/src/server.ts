@@ -11,6 +11,7 @@ import jwt from 'jsonwebtoken';
 import authRoutes from './routes/auth';
 import projectRoutes from './routes/projects';
 import taskRoutes from './routes/tasks';
+import githubRoutes from './routes/github';
 
 dotenv.config();
 
@@ -77,6 +78,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/github', githubRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'Server is running!', timestamp: new Date().toISOString() });

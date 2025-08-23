@@ -76,13 +76,19 @@ export class GitHubService {
       if (!task) return;
 
       // Add commit as a comment
-      await prisma.comment.create({
-        data: {
-          content: `🔗 **Commit linked:** ${commitMessage}\n\nCommit: \`${commitId.substring(0, 7)}\`\nRepository: ${repoName}`,
-          taskId: task.id,
-          authorId: task.creatorId // Use task creator as comment author
-        }
-      });
+console.log('Creating commit comment for task:', taskKey);
+console.log('Task found:', !!task);
+console.log('Task creator ID:', task.creatorId);
+
+await prisma.comment.create({
+  data: {
+    content: `🔗 **Commit linked:** ${commitMessage}\n\nCommit: \`${commitId.substring(0, 7)}\`\nRepository: ${repoName}`,
+    taskId: task.id,
+    authorId: task.creatorId
+  }
+});
+
+console.log('Comment created successfully');
 
       // If commit message indicates task completion, move to Done
       if (isClosing) {

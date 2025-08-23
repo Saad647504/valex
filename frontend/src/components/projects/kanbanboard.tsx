@@ -1,6 +1,5 @@
 // frontend/src/components/projects/KanbanBoard.tsx
 'use client';
-
 import { useState } from 'react';
 import {
   DndContext,
@@ -22,6 +21,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useProjects } from '@/contexts/projectcontext';
 import axios from 'axios';
+import TaskSearch from '@/components/search/tasksearch';
 
 interface Task {
   id: string;
@@ -265,6 +265,7 @@ function KanbanColumn({ column, currentProject }: { column: Column; currentProje
 export default function KanbanBoard() {
   const { currentProject, loading, loadProject } = useProjects();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -352,10 +353,19 @@ export default function KanbanBoard() {
 
   return (
     <div className="h-full">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{currentProject.name}</h1>
-        <p className="text-gray-600">{currentProject.description}</p>
-      </div>
+      <div className="mb-6 flex items-center justify-between">
+  <div>
+    <h1 className="text-2xl font-bold text-gray-900">{currentProject.name}</h1>
+    <p className="text-gray-600">{currentProject.description}</p>
+  </div>
+  
+  <button
+    onClick={() => setShowSearch(true)}
+    className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+  >
+    🔍 Search Tasks
+  </button>
+</div>
 
       <DndContext
         sensors={sensors}
@@ -386,7 +396,14 @@ export default function KanbanBoard() {
             </div>
           ) : null}
         </DragOverlay>
-      </DndContext>
-    </div>
-  );
+        </DndContext>
+
+{showSearch && (
+  <TaskSearch
+    projectId={currentProject.id}
+    onClose={() => setShowSearch(false)}
+  />
+)}
+</div>
+);
 }

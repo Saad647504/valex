@@ -8,6 +8,9 @@ const githubService = new GitHubService();
 // GitHub webhook endpoint
 router.post('/webhook', async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('Webhook received!');
+    console.log('Headers:', req.headers);
+    console.log('Event type:', req.headers['x-github-event']);
     const signature = req.headers['x-hub-signature-256'] as string;
     const event = req.headers['x-github-event'] as string;
     const payload = JSON.stringify(req.body);

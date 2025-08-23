@@ -7,9 +7,19 @@ export class GitHubService {
   
   // Verify webhook signature for security
   verifyWebhookSignature(payload: string, signature: string): boolean {
+    if (!signature) {
+      console.log('No signature provided');
+      return false;
+    }
+    
     const secret = process.env.GITHUB_WEBHOOK_SECRET!;
+    console.log('Webhook secret loaded:', !!secret);
+    console.log('Received signature:', signature);
+    
     const hmac = crypto.createHmac('sha256', secret);
     const digest = 'sha256=' + hmac.update(payload).digest('hex');
+    console.log('Expected signature:', digest);
+    
     return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
   }
 

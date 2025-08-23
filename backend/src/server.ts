@@ -12,6 +12,7 @@ import authRoutes from './routes/auth';
 import projectRoutes from './routes/projects';
 import taskRoutes from './routes/tasks';
 import githubRoutes from './routes/github';
+import analyticsRoutes from './routes/analytics';
 
 dotenv.config();
 
@@ -79,6 +80,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/github', githubRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'Server is running!', timestamp: new Date().toISOString() });

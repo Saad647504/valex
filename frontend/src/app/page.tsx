@@ -6,10 +6,11 @@ import { ProjectProvider, useProjects } from '@/contexts/projectcontext';
 import LoginForm from '@/components/auth/loginform';
 import ProjectsList from '@/components/projects/projectslist';
 import KanbanBoard from '@/components/projects/kanbanboard';
+import AnalyticsDashboard from '@/components/analytics/analyticsdashboard';
 
 function Dashboard() {
-  const [view, setView] = useState<'projects' | 'kanban'>('projects');
-  const { loadProject } = useProjects();
+  const [view, setView] = useState<'projects' | 'kanban' | 'analytics'>('projects');
+  const { loadProject, currentProject } = useProjects();
 
   const handleSelectProject = async (projectId: string) => {
     await loadProject(projectId);
@@ -29,28 +30,48 @@ function Dashboard() {
           
           <div className="flex items-center space-x-4">
             {view === 'kanban' && (
+              <>
+                <button
+                  onClick={() => setView('projects')}
+                  className="text-sm text-gray-600 hover:text-gray-900"
+                >
+                  ← Back to Projects
+                </button>
+                <button
+                  onClick={() => setView('analytics')}
+                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                >
+                  Analytics
+                </button>
+              </>
+            )}
+            {view === 'analytics' && (
               <button
-                onClick={() => setView('projects')}
+                onClick={() => setView('kanban')}
                 className="text-sm text-gray-600 hover:text-gray-900"
               >
-                ← Back to Projects
+                ← Back to Board
               </button>
             )}
           </div>
         </div>
       </div>
 
-      <div className="flex-1 p-6 overflow-auto">
-        {view === 'projects' ? (
-          <div>
+      <div className="flex-1 overflow-auto">
+        {view === 'projects' && (
+          <div className="p-6">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Projects</h1>
               <p className="text-gray-600">Manage your team's projects and tasks</p>
             </div>
             <ProjectsList onSelectProject={handleSelectProject} />
           </div>
-        ) : (
-          <KanbanBoard />
+        )}
+        
+        {view === 'kanban' && <KanbanBoard />}
+        
+        {view === 'analytics' && currentProject && (
+          <AnalyticsDashboard projectId={currentProject.id} />
         )}
       </div>
     </div>

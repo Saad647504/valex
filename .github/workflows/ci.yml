@@ -35,7 +35,7 @@ jobs:
 
       - name: Backend typecheck
         working-directory: backend
-        run: npx --yes typescript@^5 tsc --noEmit
+        run: npm run typecheck || npx tsc --noEmit
 
       - name: Frontend typecheck
         working-directory: frontend
@@ -47,5 +47,4 @@ jobs:
 
       - name: Backend build
         working-directory: backend
-        run: |
-          npx --yes typescript@^5 tsc
+        run: npm run build || npx tsc

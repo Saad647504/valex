@@ -18,7 +18,7 @@ async function main() {
       firstName: 'John',
       lastName: 'Doe',
       password: hashedPassword,
-      role: 'DEVELOPER',
+      role: 'MEMBER',
     },
   });
 

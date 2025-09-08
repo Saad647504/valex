@@ -62,3 +62,34 @@ This project helps me practice:
 Week 1: Project setup, tech stack research, initial architecture
 Week 2: [Coming soon] Authentication and database implementation
 Week 3: [Coming soon] UI development and real-time features
+
+## 🔗 GitHub Integration
+
+The app supports GitHub webhooks to attach commits/PRs to tasks and auto-move tasks when PRs are merged.
+
+- Setup in your repo:
+  - Payload URL: `https://<your-domain>/api/github/webhook` (or `http://localhost:5001/api/github/webhook` in dev)
+  - Content type: `application/json`
+  - Secret: set the same value as `GITHUB_WEBHOOK_SECRET` in the backend env
+  - Events: select at least `push` and `pull_request` (and optionally `ping` for testing)
+
+- Backend env:
+  - `GITHUB_WEBHOOK_SECRET` must be set
+  - Ensure `CORS_ORIGIN` allows your frontend origin
+
+- Local ping test (replace values as needed):
+
+```bash
+export GITHUB_WEBHOOK_SECRET=your_secret
+curl -X POST \
+  -H 'Content-Type: application/json' \
+  -H 'X-GitHub-Event: ping' \
+  -H 'X-GitHub-Delivery: test-123' \
+  -H "X-Hub-Signature-256: sha256=$(printf '{}' | openssl dgst -sha256 -hmac $GITHUB_WEBHOOK_SECRET -r | awk '{print $1}')" \
+  --data '{}' \
+  http://localhost:5001/api/github/webhook
+```
+
+Expected response: `{ "success": true, "pong": true }`.
+
+Include a task key like `PROJ-12` or phrases like `closes PROJ-12` in commit messages or PR titles to link them.

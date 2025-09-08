@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { authAPI, getAuthToken, setAuthToken } from '@/lib/api';
 
 interface User {
   id: string;
@@ -10,6 +10,7 @@ interface User {
   firstName: string;
   lastName: string;
   role: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
@@ -31,61 +32,94 @@ interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE = 'http://localhost:5001/api';
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Set up axios defaults
   useEffect(() => {
-    const savedToken = localStorage.getItem('token');
+    const savedToken = getAuthToken();
     if (savedToken) {
       setToken(savedToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
       
-      // Get user info
-      axios.get(`${API_BASE}/auth/me`)
-        .then(response => {
-          setUser(response.data.user);
-        })
-        .catch(() => {
-          localStorage.removeItem('token');
+      // Try to fetch user data with the saved token
+      const fetchUserData = async () => {
+        try {
+          const response = await fetch('/api/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${savedToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data.user);
+          } else {
+            // Token is invalid, clear it
+            setAuthToken(null);
+            setToken(null);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          setAuthToken(null);
           setToken(null);
-        });
+        }
+      };
+      
+      fetchUserData();
     }
     setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await axios.post(`${API_BASE}/auth/login`, {
-      email,
-      password
-    });
-    
-    const { user, token } = response.data;
-    setUser(user);
-    setToken(token);
-    localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    try {
+      console.log('AuthContext: Attempting login for:', email);
+      const response = await authAPI.login(email, password);
+      console.log('AuthContext: Login response received:', { 
+        user: response.user ? 'user data received' : 'no user data',
+        token: response.token ? 'token received' : 'no token' 
+      });
+      
+      const { user, token } = response;
+      setUser(user);
+      setToken(token);
+      setAuthToken(token); // Save token to localStorage
+      console.log('AuthContext: Login successful, user and token set');
+    } catch (error) {
+      console.error('AuthContext: Login failed:', error);
+      throw error;
+    }
   };
 
   const register = async (userData: RegisterData) => {
-    const response = await axios.post(`${API_BASE}/auth/register`, userData);
-    
-    const { user, token } = response.data;
-    setUser(user);
-    setToken(token);
-    localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    try {
+      console.log('AuthContext: Attempting registration for:', userData.email);
+      const response = await authAPI.register(userData);
+      console.log('AuthContext: Registration response received:', response);
+      
+      if (!response || !response.user || !response.token) {
+        throw new Error('Invalid response format from registration');
+      }
+      
+      const { user, token } = response;
+      console.log('AuthContext: Setting user and token...');
+      
+      setUser(user);
+      setToken(token);
+      setAuthToken(token); // Save token to localStorage
+      
+      console.log('AuthContext: Registration successful, user and token set');
+    } catch (error) {
+      console.error('AuthContext: Registration failed:', error);
+      throw error;
+    }
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    setAuthToken(null);
   };
 
   return (

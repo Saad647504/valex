@@ -1,0 +1,50 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: valex
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    env_file:
+      - backend/.env.example
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/valex?schema=public
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+    depends_on:
+      - db
+      - redis
+    ports:
+      - '5001:5001'
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    environment:
+      NODE_ENV: production
+      # Set to call backend directly in production
+      NEXT_PUBLIC_API_BASE: http://localhost:5001/api
+    depends_on:
+      - backend
+    ports:
+      - '3000:3000'
+
+volumes:
+  db_data:
+

@@ -69,13 +69,17 @@ export class AnalyticsService {
       this.getCompletionTrends(projectId)
     ]);
 
+    // Check if this is a solo project (only owner, no team members)
+    const isSoloProject = teamPerformance.length <= 1;
+
     return {
       taskMetrics,
       velocityData,
-      teamPerformance,
+      teamPerformance: isSoloProject ? [] : teamPerformance, // Hide team data for solo projects
       priorityDistribution,
       completionTrends,
-      insights: this.generateInsights(taskMetrics, velocityData, teamPerformance)
+      insights: this.generateInsights(taskMetrics, velocityData, teamPerformance, isSoloProject),
+      isSoloProject
     };
   }
 
@@ -215,13 +219,16 @@ export class AnalyticsService {
     return dailyCompletions;
   }
 
-  private generateInsights(taskMetrics: TaskMetrics, velocityData: VelocityData[], teamPerformance: TeamMember[]): Insight[] {
+  private generateInsights(taskMetrics: TaskMetrics, velocityData: VelocityData[], teamPerformance: TeamMember[], isSoloProject?: boolean): Insight[] {
     const insights: Insight[] = [];
+    const isSolo = isSoloProject === true;
     
     if (taskMetrics.completionRate < 40) {
       insights.push({
         type: 'warning',
-        message: 'Low completion rate detected. Consider reviewing task complexity or team capacity.'
+        message: isSolo 
+          ? 'Low completion rate detected. Consider breaking tasks into smaller, manageable pieces.'
+          : 'Low completion rate detected. Consider reviewing task complexity or team capacity.'
       });
     }
     
@@ -229,18 +236,43 @@ export class AnalyticsService {
     if (avgVelocity < 2) {
       insights.push({
         type: 'info', 
-        message: 'Team velocity is below average. Consider breaking down larger tasks.'
+        message: isSolo
+          ? 'Low productivity this week. Try setting smaller daily goals to build momentum.'
+          : 'Team velocity is below average. Consider breaking down larger tasks.'
+      });
+    } else if (avgVelocity > 5 && isSolo) {
+      insights.push({
+        type: 'success',
+        message: 'Great productivity streak! You\'ve been consistently completing tasks.'
       });
     }
 
-    const topPerformer = teamPerformance.reduce((best: TeamMember | null, current: TeamMember) => 
-      current.completionRate > (best?.completionRate || 0) ? current : best, null as TeamMember | null);
-    
-    if (topPerformer) {
-      insights.push({
-        type: 'success',
-        message: `${topPerformer.name} has the highest completion rate at ${topPerformer.completionRate}%.`
-      });
+    if (!isSolo) {
+      const topPerformer = teamPerformance.reduce((best: TeamMember | null, current: TeamMember) => 
+        current.completionRate > (best?.completionRate || 0) ? current : best, null as TeamMember | null);
+      
+      if (topPerformer) {
+        insights.push({
+          type: 'success',
+          message: `${topPerformer.name} has the highest completion rate at ${topPerformer.completionRate}%.`
+        });
+      }
+    } else {
+      // Solo project specific insights
+      if (taskMetrics.total > 0 && taskMetrics.completed > 0) {
+        const avgCompletionTime = taskMetrics.averageCompletionTime;
+        if (avgCompletionTime < 24) {
+          insights.push({
+            type: 'success',
+            message: 'You\'re completing tasks quickly! Great focus and efficiency.'
+          });
+        } else if (avgCompletionTime > 72) {
+          insights.push({
+            type: 'info',
+            message: 'Tasks are taking longer to complete. Consider breaking them down into smaller steps.'
+          });
+        }
+      }
     }
 
     return insights;

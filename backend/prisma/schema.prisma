@@ -15,7 +15,7 @@ model User {
   lastName    String
   password    String
   avatar      String?
-  role        Role     @default(DEVELOPER)
+  role        Role     @default(MEMBER)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -26,6 +26,13 @@ model User {
   createdTasks     Task[]        @relation("TaskCreator")
   comments         Comment[]
   timeEntries      TimeEntry[]
+  focusSessions    FocusSession[]
+  notes           Note[]
+  notifications   Notification[]
+  sentInvitations ProjectInvitation[]
+  receivedInvitations ProjectInvitation[] @relation("InvitationInvitee")
+  colleagueRelations  ColleagueRelation[] @relation("ColleagueFrom")
+  colleagueOf         ColleagueRelation[] @relation("ColleagueTo")
 
   @@map("users")
 }
@@ -45,6 +52,9 @@ model Project {
   members     ProjectMember[]
   columns     Column[]
   tasks       Task[]
+  focusSessions FocusSession[]
+  notes       Note[]
+  invitations ProjectInvitation[]
 
   @@map("projects")
 }
@@ -78,19 +88,20 @@ model Column {
 }
 
 model Task {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  key         String     @unique
-  status      TaskStatus @default(TODO)
-  priority    Priority   @default(MEDIUM)
-  position    Float
-  aiInsights  String? 
+  id              String     @id @default(cuid())
+  title           String
+  description     String?
+  key             String     @unique
+  status          TaskStatus @default(TODO)
+  priority        Priority   @default(MEDIUM)
+  position        Float
+  estimatedMinutes Int?       // Estimated time in minutes for focus sessions
+  aiInsights      String? 
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  dueDate     DateTime?
-  completedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  dueDate         DateTime?
+  completedAt     DateTime?
 
   project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId   String
@@ -103,6 +114,7 @@ model Task {
   
   comments    Comment[]
   timeEntries TimeEntry[]
+  focusSessions FocusSession[]
 
   @@map("tasks")
 }
@@ -137,10 +149,101 @@ model TimeEntry {
   @@map("time_entries")
 }
 
+model FocusSession {
+  id             String           @id @default(cuid())
+  duration       Int              // Duration in seconds
+  actualDuration Int?             // Actual time spent in seconds
+  sessionType    SessionType      @default(FOCUS)
+  status         SessionStatus    @default(ACTIVE)
+  notes          String?
+  startedAt      DateTime         @default(now())
+  endedAt        DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  project        Project?         @relation(fields: [projectId], references: [id])
+  projectId      String?
+  task           Task?            @relation(fields: [taskId], references: [id])
+  taskId         String?
+
+  @@map("focus_sessions")
+}
+
+model Note {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  color       String   @default("#1e293b")
+  tags        String[] @default([])
+  isPinned    Boolean  @default(false)
+  isStarred   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  project     Project? @relation(fields: [projectId], references: [id])
+  projectId   String?
+
+  @@map("notes")
+}
+
+model Notification {
+  id          String            @id @default(cuid())
+  type        NotificationType
+  title       String
+  message     String
+  data        Json?             // Flexible data for different notification types
+  isRead      Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  
+  @@map("notifications")
+}
+
+model ProjectInvitation {
+  id          String            @id @default(cuid())
+  email       String
+  role        ProjectRole       @default(MEMBER)
+  status      InvitationStatus  @default(PENDING)
+  token       String            @unique
+  expiresAt   DateTime
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  inviter     User              @relation(fields: [inviterId], references: [id])
+  inviterId   String
+  invitee     User?             @relation("InvitationInvitee", fields: [inviteeId], references: [id])
+  inviteeId   String?
+
+  @@map("project_invitations")
+}
+
+model ColleagueRelation {
+  id          String                @id @default(cuid())
+  status      ColleagueStatus       @default(ACTIVE)
+  connectedAt DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  
+  fromUser    User                  @relation("ColleagueFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  fromUserId  String
+  toUser      User                  @relation("ColleagueTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  toUserId    String
+  
+  @@unique([fromUserId, toUserId])
+  @@map("colleague_relations")
+}
+
 enum Role {
   ADMIN
   MANAGER
-  DEVELOPER
+  MEMBER
 }
 
 enum ProjectRole {
@@ -163,4 +266,39 @@ enum Priority {
   MEDIUM
   HIGH
   URGENT
+}
+
+enum SessionType {
+  FOCUS
+  BREAK
+  LONG_BREAK
+}
+
+enum SessionStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  INTERRUPTED
+}
+
+enum NotificationType {
+  TEAM_INVITE
+  TASK_ASSIGNED
+  TASK_COMPLETED
+  PROJECT_UPDATED
+  SESSION_COMPLETED
+  AI_INSIGHT
+  SYSTEM
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum ColleagueStatus {
+  ACTIVE
+  BLOCKED
 }

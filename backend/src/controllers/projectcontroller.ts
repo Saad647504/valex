@@ -211,3 +211,117 @@ export const getProject = async (req: AuthenticatedRequest, res: Response): Prom
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Get project by key (for Kanban board loading)
+export const getProjectByKey = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId!;
+    const { key } = req.params;
+
+    const project = await prisma.project.findFirst({
+      where: {
+        key: key.toUpperCase(),
+        OR: [
+          { ownerId: userId },
+          { 
+            members: {
+              some: { userId }
+            }
+          }
+        ]
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            }
+          }
+        },
+        columns: {
+          orderBy: { position: 'asc' },
+          include: {
+            tasks: {
+              orderBy: { position: 'asc' },
+              include: {
+                assignee: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true
+                  }
+                },
+                creator: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!project) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    res.json({ project });
+
+  } catch (error) {
+    console.error('Get project by key error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Delete project (owner only)
+export const deleteProject = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId!;
+    const { id } = req.params;
+
+    // Verify ownership
+    const project = await prisma.project.findUnique({ where: { id } });
+    if (!project) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+    if (project.ownerId !== userId) {
+      res.status(403).json({ error: 'Only the project owner can delete this project' });
+      return;
+    }
+
+    // Detach optional relations that would block deletion (set nullable FKs to null)
+    await prisma.$transaction([
+      prisma.focusSession.updateMany({ where: { projectId: id }, data: { projectId: null } }),
+      prisma.note.updateMany({ where: { projectId: id }, data: { projectId: null } }),
+    ]);
+
+    // Delete project (cascades will remove columns, tasks, members, invitations, etc.)
+    await prisma.project.delete({ where: { id } });
+
+    res.json({ message: 'Project deleted successfully' });
+  } catch (error) {
+    console.error('Delete project error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

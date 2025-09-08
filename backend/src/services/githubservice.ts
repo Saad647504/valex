@@ -7,28 +7,47 @@ export class GitHubService {
   
   // Verify webhook signature for security
   verifyWebhookSignature(payload: string, signature: string): boolean {
-    if (!signature) {
-      console.log('No signature provided');
+    try {
+      if (!signature || !payload) {
+        if (process.env.NODE_ENV !== 'production') console.log('Missing signature or payload');
+        return false;
+      }
+
+      const secret = process.env.GITHUB_WEBHOOK_SECRET;
+      if (!secret) {
+        if (process.env.NODE_ENV !== 'production') console.log('No webhook secret configured');
+        return false;
+      }
+
+      // Support both sha256 (preferred) and legacy sha1 signatures
+      const [alg, sigHex] = signature.split('=');
+      if (!alg || !sigHex) return false;
+
+      const algo = alg.toLowerCase();
+      if (algo !== 'sha256' && algo !== 'sha1') return false;
+
+      const hmac = crypto.createHmac(algo as any, secret);
+      const expected = `${algo}=` + hmac.update(payload, 'utf8').digest('hex');
+
+      const a = Buffer.from(expected, 'utf8');
+      const b = Buffer.from(signature, 'utf8');
+
+      if (a.length !== b.length) return false;
+      return crypto.timingSafeEqual(a, b);
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'production') console.log('Signature verification error:', e);
       return false;
     }
-    
-    const secret = process.env.GITHUB_WEBHOOK_SECRET!;
-    console.log('Webhook secret loaded:', !!secret);
-    console.log('Received signature:', signature);
-    
-    const hmac = crypto.createHmac('sha256', secret);
-    const digest = 'sha256=' + hmac.update(payload).digest('hex');
-    console.log('Expected signature:', digest);
-    
-    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
   }
 
   // Process push events (commits)
   async handlePushEvent(payload: any) {
-    const { commits, repository } = payload;
-    
+    const commits = payload?.commits ?? [];
+    const repoName = payload?.repository?.full_name ?? 'unknown/repo';
+    if (!Array.isArray(commits) || commits.length === 0) return;
     for (const commit of commits) {
-      await this.processCommitMessage(commit.message, commit.id, repository.full_name);
+      if (!commit?.message || !commit?.id) continue;
+      await this.processCommitMessage(commit.message, commit.id, repoName);
     }
   }
 
@@ -76,9 +95,11 @@ export class GitHubService {
       if (!task) return;
 
       // Add commit as a comment
-      console.log('Creating commit comment for task:', taskKey);
-      console.log('Task found:', !!task);
-      console.log('Task creator ID:', task.creatorId);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Creating commit comment for task:', taskKey);
+        console.log('Task found:', !!task);
+        console.log('Task creator ID:', task.creatorId);
+      }
       await prisma.comment.create({
         data: {
             content: `🔗 **Commit linked:** ${commitMessage}\n\nCommit: \`${commitId.substring(0, 7)}\`\nRepository: ${repoName}`,
@@ -86,7 +107,7 @@ export class GitHubService {
             authorId: task.creatorId
         }
     });
-    console.log('Comment created successfully');
+    if (process.env.NODE_ENV !== 'production') console.log('Comment created successfully');
 
       // If commit message indicates task completion, move to Done
       if (isClosing) {
@@ -107,7 +128,7 @@ export class GitHubService {
             }
           });
 
-          console.log(`Task ${taskKey} moved to Done due to commit ${commitId.substring(0, 7)}`);
+          if (process.env.NODE_ENV !== 'production') console.log(`Task ${taskKey} moved to Done due to commit ${commitId.substring(0, 7)}`);
         }
       }
 
@@ -168,7 +189,7 @@ export class GitHubService {
           }
         });
 
-        console.log(`Task ${taskKey} completed via PR #${prNumber}`);
+        if (process.env.NODE_ENV !== 'production') console.log(`Task ${taskKey} completed via PR #${prNumber}`);
       }
 
     } catch (error) {

@@ -10,18 +10,19 @@ export function useSocket() {
     if (!token) return;
 
     // Connect to WebSocket server
-    socketRef.current = io('http://localhost:5001', {
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || undefined; // default to same origin
+    socketRef.current = io(wsUrl || '', {
       auth: {
         token
       }
     });
 
     socketRef.current.on('connect', () => {
-      console.log('Connected to WebSocket server');
+    if (process.env.NODE_ENV !== 'production') console.log('Connected to WebSocket server');
     });
 
     socketRef.current.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
+    if (process.env.NODE_ENV !== 'production') console.log('Disconnected from WebSocket server');
     });
 
     socketRef.current.on('connect_error', (error) => {
@@ -51,13 +52,25 @@ export function useSocket() {
   const onTaskCreated = (callback: (data: any) => void) => {
     if (socketRef.current) {
       socketRef.current.on('task-created', callback);
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.off('task-created', callback);
+        }
+      };
     }
+    return () => {}; // Return empty function if no socket
   };
 
   const onTaskMoved = (callback: (data: any) => void) => {
     if (socketRef.current) {
       socketRef.current.on('task-moved', callback);
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.off('task-moved', callback);
+        }
+      };
     }
+    return () => {}; // Return empty function if no socket
   };
 
   return {

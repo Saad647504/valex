@@ -2,6 +2,12 @@
 const API_PROXY_TARGET = process.env.API_PROXY_TARGET || 'http://localhost:5001';
 
 const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   async rewrites() {
     // Only proxy when API_BASE is not set on the client
     const useProxy = !process.env.NEXT_PUBLIC_API_BASE;

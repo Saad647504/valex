@@ -77,8 +77,8 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 export const authAPI = {
   login: async (email: string, password: string) => {
     // eslint-disable-next-line no-console
-    console.log('API: Making login request to /auth/login');
-    const response = await apiRequest('/auth/login', {
+    console.log('API: Making login request to /api/auth/login');
+    const response = await apiRequest('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
@@ -105,9 +105,9 @@ export const authAPI = {
     password: string;
   }) => {
     // eslint-disable-next-line no-console
-    console.log('API: Making registration request to /auth/register with data:', userData);
+    console.log('API: Making registration request to /api/auth/register with data:', userData);
     try {
-      const response = await apiRequest('/auth/register', {
+      const response = await apiRequest('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify(userData),
       });

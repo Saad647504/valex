@@ -156,6 +156,7 @@ app.post('/api/auth/register', async (req, res): Promise<void> => {
         firstName,
         lastName,
         password: hashedPassword,
+        role: 'MEMBER' // Explicitly set role to avoid enum issues
       },
       select: {
         id: true,
@@ -163,6 +164,7 @@ app.post('/api/auth/register', async (req, res): Promise<void> => {
         username: true,
         firstName: true,
         lastName: true,
+        role: true
       }
     });
 

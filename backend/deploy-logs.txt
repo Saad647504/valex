@@ -1,0 +1,161 @@
+Access to fetch at 'https://valex-production.up.railway.app/api/auth/register' from origin 'https://valex-92cdxktp4-saabachaoui-1974s-projects.vercel.app' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
+valex-production.up.railway.app/api/auth/register:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
+117-c3504467415cfdc6.js:1 API: Fetch failed: TypeError: Failed to fetch
+    at a (826-217806addb9524dd.js:1:21505)
+    at Object.register (826-217806addb9524dd.js:1:22201)
+    at g (826-217806addb9524dd.js:1:1203)
+    at C (page-d512bd42b2f91db5.js:1:9234)
+    at Object.a_ (fd9d1056-3b649217957fa157.js:1:72146)
+    at aR (fd9d1056-3b649217957fa157.js:1:72300)
+    at fd9d1056-3b649217957fa157.js:1:139239
+    at sF (fd9d1056-3b649217957fa157.js:1:139338)
+    at sM (fd9d1056-3b649217957fa157.js:1:139752)
+    at fd9d1056-3b649217957fa157.js:1:145895
+window.console.error @ 117-c3504467415cfdc6.js:1Understand this error
+117-c3504467415cfdc6.js:1 API: Registration request failed: TypeError: Failed to fetch
+    at a (826-217806addb9524dd.js:1:21505)
+    at Object.register (826-217806addb9524dd.js:1:22201)
+    at g (826-217806addb9524dd.js:1:1203)
+    at C (page-d512bd42b2f91db5.js:1:9234)
+    at Object.a_ (fd9d1056-3b649217957fa157.js:1:72146)
+    at aR (fd9d1056-3b649217957fa157.js:1:72300)
+    at fd9d1056-3b649217957fa157.js:1:139239
+    at sF (fd9d1056-3b649217957fa157.js:1:139338)
+    at sM (fd9d1056-3b649217957fa157.js:1:139752)
+    at fd9d1056-3b649217957fa157.js:1:145895
+window.console.error @ 117-c3504467415cfdc6.js:1Understand this error
+117-c3504467415cfdc6.js:1 AuthContext: Registration failed: TypeError: Failed to fetch
+    at a (826-217806addb9524dd.js:1:21505)
+    at Object.register (826-217806addb9524dd.js:1:22201)
+    at g (826-217806addb9524dd.js:1:1203)
+    at C (page-d512bd42b2f91db5.js:1:9234)
+    at Object.a_ (fd9d1056-3b649217957fa157.js:1:72146)
+    at aR (fd9d1056-3b649217957fa157.js:1:72300)
+    at fd9d1056-3b649217957fa157.js:1:139239
+    at sF (fd9d1056-3b649217957fa157.js:1:139338)
+    at sM (fd9d1056-3b649217957fa157.js:1:139752)
+    at fd9d1056-3b649217957fa157.js:1:145895
+window.console.error @ 117-c3504467415cfdc6.js:1Understand this error
+117-c3504467415cfdc6.js:1 Signup form error: TypeError: Failed to fetch
+    at a (826-217806addb9524dd.js:1:21505)
+    at Object.register (826-217806addb9524dd.js:1:22201)
+    at g (826-217806addb9524dd.js:1:1203)
+    at C (page-d512bd42b2f91db5.js:1:9234)
+    at Object.a_ (fd9d1056-3b649217957fa157.js:1:72146)
+    at aR (fd9d1056-3b649217957fa157.js:1:72300)
+    at fd9d1056-3b649217957fa157.js:1:139239
+    at sF (fd9d1056-3b649217957fa157.js:1:139338)
+    at sM (fd9d1056-3b649217957fa157.js:1:139752)
+    at fd9d1056-3b649217957fa157.js:1:145895
+window.console.error @ 117-c3504467415cfdc6.js:1Understand this error
+826-217806addb9524dd.js:1 AuthContext: Attempting registration for: sbsb04@gmail.com
+826-217806addb9524dd.js:1 API: Making registration request to /auth/register with data: {firstName: 'jkgedKJHBrw', lastName: 'wklBWm ', email: 'sbsb04@gmail.com', username: 'sb04', password: 'Saadbachaoui6475'}
+valex-92cdxktp4-saabachaoui-1974s-projects.vercel.app/:1 Access to fetch at 'https://valex-production.up.railway.app/api/auth/register' from origin 'https://valex-92cdxktp4-saabachaoui-1974s-projects.vercel.app' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
+826-217806addb9524dd.js:1  POST https://valex-production.up.railway.app/api/auth/register net::ERR_FAILED
+a @ 826-217806addb9524dd.js:1
+register @ 826-217806addb9524dd.js:1
+g @ 826-217806addb9524dd.js:1
+C @ page-d512bd42b2f91db5.js:1
+a_ @ fd9d1056-3b649217957fa157.js:1
+aR @ fd9d1056-3b649217957fa157.js:1
+(anonymous) @ fd9d1056-3b649217957fa157.js:1
+sF @ fd9d1056-3b649217957fa157.js:1
+sM @ fd9d1056-3b649217957fa157.js:1
+(anonymous) @ fd9d1056-3b649217957fa157.js:1
+o4 @ fd9d1056-3b649217957fa157.js:1
+iV @ fd9d1056-3b649217957fa157.js:1
+sU @ fd9d1056-3b649217957fa157.js:1
+uR @ fd9d1056-3b649217957fa157.js:1
+uM @ fd9d1056-3b649217957fa157.js:1Understand this error
+117-c3504467415cfdc6.js:1 API: Fetch failed: TypeError: Failed to fetch
+    at a (826-217806addb9524dd.js:1:21505)
+    at Object.register (826-217806addb9524dd.js:1:22201)
+    at g (826-217806addb9524dd.js:1:1203)
+    at C (page-d512bd42b2f91db5.js:1:9234)
+    at Object.a_ (fd9d1056-3b649217957fa157.js:1:72146)
+    at aR (fd9d1056-3b649217957fa157.js:1:72300)
+    at fd9d1056-3b649217957fa157.js:1:139239
+    at sF (fd9d1056-3b649217957fa157.js:1:139338)
+    at sM (fd9d1056-3b649217957fa157.js:1:139752)
+    at fd9d1056-3b649217957fa157.js:1:145895
+window.console.error @ 117-c3504467415cfdc6.js:1
+a @ 826-217806addb9524dd.js:1
+await in a
+register @ 826-217806addb9524dd.js:1
+g @ 826-217806addb9524dd.js:1
+C @ page-d512bd42b2f91db5.js:1
+a_ @ fd9d1056-3b649217957fa157.js:1
+aR @ fd9d1056-3b649217957fa157.js:1
+(anonymous) @ fd9d1056-3b649217957fa157.js:1
+sF @ fd9d1056-3b649217957fa157.js:1
+sM @ fd9d1056-3b649217957fa157.js:1
+(anonymous) @ fd9d1056-3b649217957fa157.js:1
+o4 @ fd9d1056-3b649217957fa157.js:1
+iV @ fd9d1056-3b649217957fa157.js:1
+sU @ fd9d1056-3b649217957fa157.js:1
+uR @ fd9d1056-3b649217957fa157.js:1
+uM @ fd9d1056-3b649217957fa157.js:1Understand this error
+117-c3504467415cfdc6.js:1 API: Registration request failed: TypeError: Failed to fetch
+    at a (826-217806addb9524dd.js:1:21505)
+    at Object.register (826-217806addb9524dd.js:1:22201)
+    at g (826-217806addb9524dd.js:1:1203)
+    at C (page-d512bd42b2f91db5.js:1:9234)
+    at Object.a_ (fd9d1056-3b649217957fa157.js:1:72146)
+    at aR (fd9d1056-3b649217957fa157.js:1:72300)
+    at fd9d1056-3b649217957fa157.js:1:139239
+    at sF (fd9d1056-3b649217957fa157.js:1:139338)
+    at sM (fd9d1056-3b649217957fa157.js:1:139752)
+    at fd9d1056-3b649217957fa157.js:1:145895
+window.console.error @ 117-c3504467415cfdc6.js:1
+register @ 826-217806addb9524dd.js:1
+await in register
+g @ 826-217806addb9524dd.js:1
+C @ page-d512bd42b2f91db5.js:1
+a_ @ fd9d1056-3b649217957fa157.js:1
+aR @ fd9d1056-3b649217957fa157.js:1
+(anonymous) @ fd9d1056-3b649217957fa157.js:1
+sF @ fd9d1056-3b649217957fa157.js:1
+sM @ fd9d1056-3b649217957fa157.js:1
+(anonymous) @ fd9d1056-3b649217957fa157.js:1
+o4 @ fd9d1056-3b649217957fa157.js:1
+iV @ fd9d1056-3b649217957fa157.js:1
+sU @ fd9d1056-3b649217957fa157.js:1
+uR @ fd9d1056-3b649217957fa157.js:1
+uM @ fd9d1056-3b649217957fa157.js:1Understand this error
+117-c3504467415cfdc6.js:1 AuthContext: Registration failed: TypeError: Failed to fetch
+    at a (826-217806addb9524dd.js:1:21505)
+    at Object.register (826-217806addb9524dd.js:1:22201)
+    at g (826-217806addb9524dd.js:1:1203)
+    at C (page-d512bd42b2f91db5.js:1:9234)
+    at Object.a_ (fd9d1056-3b649217957fa157.js:1:72146)
+    at aR (fd9d1056-3b649217957fa157.js:1:72300)
+    at fd9d1056-3b649217957fa157.js:1:139239
+    at sF (fd9d1056-3b649217957fa157.js:1:139338)
+    at sM (fd9d1056-3b649217957fa157.js:1:139752)
+    at fd9d1056-3b649217957fa157.js:1:145895
+window.console.error @ 117-c3504467415cfdc6.js:1
+g @ 826-217806addb9524dd.js:1
+await in g
+C @ page-d512bd42b2f91db5.js:1
+a_ @ fd9d1056-3b649217957fa157.js:1
+aR @ fd9d1056-3b649217957fa157.js:1
+(anonymous) @ fd9d1056-3b649217957fa157.js:1
+sF @ fd9d1056-3b649217957fa157.js:1
+sM @ fd9d1056-3b649217957fa157.js:1
+(anonymous) @ fd9d1056-3b649217957fa157.js:1
+o4 @ fd9d1056-3b649217957fa157.js:1
+iV @ fd9d1056-3b649217957fa157.js:1
+sU @ fd9d1056-3b649217957fa157.js:1
+uR @ fd9d1056-3b649217957fa157.js:1
+uM @ fd9d1056-3b649217957fa157.js:1Understand this error
+117-c3504467415cfdc6.js:1 Signup form error: TypeError: Failed to fetch
+    at a (826-217806addb9524dd.js:1:21505)
+    at Object.register (826-217806addb9524dd.js:1:22201)
+    at g (826-217806addb9524dd.js:1:1203)
+    at C (page-d512bd42b2f91db5.js:1:9234)
+    at Object.a_ (fd9d1056-3b649217957fa157.js:1:72146)
+    at aR (fd9d1056-3b649217957fa157.js:1:72300)
+    at fd9d1056-3b649217957fa157.js:1:139239
+    at sF (fd9d1056-3b649217957fa157.js:1:139338)
+    at sM (fd9d1056-3b649217957fa157.js:1:139752)
+    at fd9d1056-3b649217957fa157.js:1:145895

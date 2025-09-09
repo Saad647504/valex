@@ -3,7 +3,16 @@ import { PrismaClient } from '@prisma/client';
 import { hashPassword, comparePasswords, generateToken } from '../utils/auth';
 import { RegisterRequest, LoginRequest } from '../types/auth';
 
-const prisma = new PrismaClient();
+let prisma: PrismaClient;
+
+function getPrisma(): PrismaClient {
+  if (!prisma) {
+    prisma = new PrismaClient({
+      log: ['error'],
+    });
+  }
+  return prisma;
+}
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -19,7 +28,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await getPrisma().user.findFirst({
       where: {
         OR: [
           { email },
@@ -35,7 +44,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const hashedPassword = await hashPassword(password);
 
-    const user = await prisma.user.create({
+    const user = await getPrisma().user.create({
       data: {
         email,
         username,
@@ -76,7 +85,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await getPrisma().user.findUnique({
       where: { email }
     });
 
@@ -111,7 +120,7 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
 
-    const user = await prisma.user.findUnique({
+    const user = await getPrisma().user.findUnique({
       where: { id: userId },
       select: {
         id: true,

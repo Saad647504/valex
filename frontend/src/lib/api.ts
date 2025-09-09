@@ -136,7 +136,7 @@ export const authAPI = {
 
 // Project APIs
 export const projectAPI = {
-  getProjects: () => apiRequest('/projects'),
+  getProjects: () => apiRequest('/api/projects'),
   
   getProject: (projectId: string) => apiRequest(`/projects/${projectId}`),
   

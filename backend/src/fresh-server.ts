@@ -218,7 +218,7 @@ app.listen(PORT, () => {
   setTimeout(() => {
     console.log('Running database migrations...');
     const { exec } = require('child_process');
-    exec('npx prisma migrate deploy || npx prisma db push', (error: any, stdout: any, stderr: any) => {
+    exec('npx prisma migrate deploy || npx prisma db push', async (error: any, stdout: any, stderr: any) => {
       if (error) {
         console.error('Migration command failed:', error?.message || error);
         if (stderr) console.error('stderr:', stderr);
@@ -227,6 +227,52 @@ app.listen(PORT, () => {
       }
       if (stdout) console.log(stdout);
       console.log('Server is ready for registration requests');
+
+      // Post-migration safety check: ensure Role enum matches schema
+      try {
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        const enumRows: Array<{ value: string }> = await prisma.$queryRawUnsafe(
+          `SELECT enumlabel as value FROM pg_enum e JOIN pg_type t ON t.oid = e.enumtypid WHERE t.typname = 'Role' ORDER BY enumsortorder`
+        );
+        const values = enumRows.map(r => r.value);
+        const needsFix = values.includes('DEVELOPER') || !values.includes('MEMBER');
+        if (needsFix) {
+          console.warn('Role enum mismatch detected. Applying online fix...');
+          await prisma.$executeRawUnsafe(`
+            BEGIN;
+            DO $$
+            BEGIN
+              IF NOT EXISTS (
+                SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace
+                WHERE t.typname = 'Role_new' AND n.nspname = 'public'
+              ) THEN
+                CREATE TYPE "public"."Role_new" AS ENUM ('ADMIN','MANAGER','MEMBER');
+              END IF;
+            END$$;
+            ALTER TABLE "public"."users" ALTER COLUMN "role" DROP DEFAULT;
+            ALTER TABLE "public"."users" 
+              ALTER COLUMN "role" TYPE "public"."Role_new" 
+              USING (
+                CASE "role"
+                  WHEN 'DEVELOPER'::"public"."Role" THEN 'MEMBER'::"public"."Role_new"
+                  WHEN 'ADMIN'::"public"."Role" THEN 'ADMIN'::"public"."Role_new"
+                  WHEN 'MANAGER'::"public"."Role" THEN 'MANAGER'::"public"."Role_new"
+                  ELSE 'MEMBER'::"public"."Role_new"
+                END
+              );
+            DROP TYPE "public"."Role";
+            ALTER TYPE "public"."Role_new" RENAME TO "Role";
+            ALTER TABLE "public"."users" ALTER COLUMN "role" SET DEFAULT 'MEMBER';
+            COMMIT;`);
+          console.log('Role enum fix applied.');
+        } else {
+          console.log('Role enum already correct:', values);
+        }
+        await prisma.$disconnect();
+      } catch (e: any) {
+        console.error('Role enum post-migration check failed:', e?.message || e);
+      }
     });
   }, 5000); // Wait 5 seconds for health checks to pass first
 });

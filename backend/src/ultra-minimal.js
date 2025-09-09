@@ -67,6 +67,78 @@ app.get('/api/projects', async (req, res) => {
   }
 });
 
+// Current user endpoint - critical for app startup
+app.get('/api/users/me', async (req, res) => {
+  try {
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const jwt = require('jsonwebtoken');
+    const { PrismaClient } = require('@prisma/client');
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    const prisma = new PrismaClient();
+    
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        avatar: true,
+        isActive: true,
+        createdAt: true
+      }
+    });
+    
+    if (!user) {
+      await prisma.$disconnect();
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    await prisma.$disconnect();
+    res.json(user);
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+// Notifications endpoint
+app.get('/api/notifications', async (req, res) => {
+  try {
+    // Return empty array for now
+    res.json([]);
+  } catch (error) {
+    console.error('Notifications error:', error);
+    res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+});
+
+// Analytics endpoints
+app.get('/api/analytics/user/:userId', async (req, res) => {
+  try {
+    // Return empty analytics
+    res.json({
+      totalTasks: 0,
+      completedTasks: 0,
+      totalTimeSpent: 0,
+      productivity: 0,
+      recentActivity: []
+    });
+  } catch (error) {
+    console.error('Analytics error:', error);
+    res.status(500).json({ error: 'Failed to fetch analytics' });
+  }
+});
+
 app.post('/api/auth/register', async (req, res) => {
   try {
     const bcrypt = require('bcryptjs');

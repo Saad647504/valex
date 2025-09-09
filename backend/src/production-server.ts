@@ -16,7 +16,7 @@ const allowedOrigins = [
   'http://localhost:3001', 
   'https://valex-frontend.vercel.app',
   process.env.CORS_ORIGIN
-].filter(Boolean);
+].filter(Boolean) as string[];
 
 app.use(cors({
   origin: allowedOrigins,

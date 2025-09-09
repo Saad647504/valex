@@ -76,6 +76,20 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('- NODE_ENV:', process.env.NODE_ENV);
   console.log('- PORT:', PORT);
   console.log('- DATABASE_URL exists:', !!process.env.DATABASE_URL);
+  
+  // Run migrations after server starts
+  if (process.env.DATABASE_URL) {
+    console.log('Running database migrations...');
+    const { exec } = require('child_process');
+    exec('npx prisma migrate deploy && npx prisma generate', (error, stdout, stderr) => {
+      if (error) {
+        console.error('Migration error:', error);
+      } else {
+        console.log('Migrations completed successfully');
+        console.log(stdout);
+      }
+    });
+  }
 });
 
 // Handle unhandled errors

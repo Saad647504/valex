@@ -39,7 +39,7 @@ app.get('/health', (req, res) => {
 
 // Simple test endpoint
 app.get('/api/test', (req, res) => {
-  res.json({ message: 'API is working!' });
+  res.json({ message: 'API is working!', exposeErrors: process.env.EXPOSE_ERRORS || '' });
 });
 
 // Database test endpoint

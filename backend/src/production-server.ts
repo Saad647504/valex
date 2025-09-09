@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 5001;
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001', 
+  'https://valex-delta.vercel.app',
   'https://valex-frontend.vercel.app',
   process.env.CORS_ORIGIN
 ].filter(Boolean) as string[];

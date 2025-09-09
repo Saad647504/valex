@@ -4,8 +4,9 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "npm run build && npx prisma migrate deploy && node dist/nuclear-server.js",
+    "startCommand": "npm run build && npx prisma migrate deploy && node dist/production-server.js",
     "healthcheckPath": "/health",
+    "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE"
   }
 }

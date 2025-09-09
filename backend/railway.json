@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "node src/ultra-minimal.js",
+    "startCommand": "npm run build && node dist/production-server.js",
     "restartPolicyType": "ON_FAILURE"
   }
 }

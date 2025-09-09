@@ -5,8 +5,6 @@
   },
   "deploy": {
     "startCommand": "node src/ultra-minimal.js",
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE"
   }
 }

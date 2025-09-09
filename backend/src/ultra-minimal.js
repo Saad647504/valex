@@ -20,6 +20,12 @@ app.use((err, req, res, next) => {
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
+// Log all requests
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url} from ${req.ip}`);
+  next();
+});
+
 app.get('/health', (req, res) => {
   console.log('Health check requested');
   try {

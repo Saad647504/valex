@@ -83,9 +83,11 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Ultra minimal server on port ${PORT}`);
-  console.log('Server ready to accept requests');
+const server = app.listen(PORT, '0.0.0.0', () => {
+  const address = server.address();
+  console.log(`Ultra minimal server listening on port ${PORT}`);
+  console.log('Server address:', address);
+  console.log('Server ready to accept requests on all interfaces (0.0.0.0)');
   console.log('Environment check:');
   console.log('- NODE_ENV:', process.env.NODE_ENV);
   console.log('- PORT:', PORT);

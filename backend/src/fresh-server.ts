@@ -189,6 +189,7 @@ app.post('/api/auth/register', async (req, res): Promise<void> => {
     console.error('Full error:', error);
     console.error('Stack trace:', error?.stack);
     // Attempt to surface common failure reasons
+    const expose = process.env.EXPOSE_ERRORS === 'true';
     if (typeof error?.message === 'string') {
       if (error.message.includes('Unique constraint failed') || error.message.includes('already exists')) {
         res.status(400).json({ error: 'User with this email or username already exists' });
@@ -202,6 +203,11 @@ app.post('/api/auth/register', async (req, res): Promise<void> => {
         res.status(500).json({ error: 'Database enum mismatch (Role). Please ensure migrations are applied.' });
         return;
       }
+    }
+    if (expose) {
+      const code = (error && (error.code || error.name)) || 'UNKNOWN';
+      res.status(500).json({ error: 'Internal server error', code, message: String(error?.message || '') });
+      return;
     }
     res.status(500).json({ error: 'Internal server error' });
   }

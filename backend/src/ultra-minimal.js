@@ -3,11 +3,27 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Express error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK' });
+  console.log('Health check requested');
+  try {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({ error: 'Health check failed' });
+  }
+});
+
+app.get('/', (req, res) => {
+  res.json({ message: 'Server is running', health: '/health', register: '/api/auth/register' });
 });
 
 app.post('/api/auth/register', async (req, res) => {
@@ -55,4 +71,18 @@ app.post('/api/auth/register', async (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Ultra minimal server on port ${PORT}`);
+  console.log('Server ready to accept requests');
+  console.log('Environment check:');
+  console.log('- NODE_ENV:', process.env.NODE_ENV);
+  console.log('- PORT:', PORT);
+  console.log('- DATABASE_URL exists:', !!process.env.DATABASE_URL);
+});
+
+// Handle unhandled errors
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });

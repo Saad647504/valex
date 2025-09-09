@@ -139,6 +139,253 @@ app.get('/api/analytics/user/:userId', async (req, res) => {
   }
 });
 
+// More analytics endpoints
+app.get('/api/analytics/project/key/:projectKey', async (req, res) => {
+  try {
+    res.json({
+      totalTasks: 0,
+      completedTasks: 0,
+      totalTimeSpent: 0,
+      productivity: 0,
+      recentActivity: []
+    });
+  } catch (error) {
+    console.error('Project analytics error:', error);
+    res.status(500).json({ error: 'Failed to fetch project analytics' });
+  }
+});
+
+// Search endpoints
+app.post('/api/search', async (req, res) => {
+  try {
+    res.json([]);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
+
+app.post('/api/search/tasks', async (req, res) => {
+  try {
+    res.json({ tasks: [], total: 0 });
+  } catch (error) {
+    console.error('Task search error:', error);
+    res.status(500).json({ error: 'Task search failed' });
+  }
+});
+
+// Task endpoints
+app.get('/api/tasks', async (req, res) => {
+  try {
+    res.json([]);
+  } catch (error) {
+    console.error('Tasks error:', error);
+    res.status(500).json({ error: 'Failed to fetch tasks' });
+  }
+});
+
+app.post('/api/tasks', async (req, res) => {
+  try {
+    res.json({ message: 'Task creation not implemented yet' });
+  } catch (error) {
+    console.error('Create task error:', error);
+    res.status(500).json({ error: 'Failed to create task' });
+  }
+});
+
+// Project endpoints
+app.get('/api/projects/:projectId', async (req, res) => {
+  try {
+    res.status(404).json({ error: 'Project not found' });
+  } catch (error) {
+    console.error('Get project error:', error);
+    res.status(500).json({ error: 'Failed to fetch project' });
+  }
+});
+
+app.get('/api/projects/key/:projectKey', async (req, res) => {
+  try {
+    res.status(404).json({ error: 'Project not found' });
+  } catch (error) {
+    console.error('Get project by key error:', error);
+    res.status(500).json({ error: 'Failed to fetch project' });
+  }
+});
+
+app.post('/api/projects', async (req, res) => {
+  try {
+    res.json({ message: 'Project creation not implemented yet' });
+  } catch (error) {
+    console.error('Create project error:', error);
+    res.status(500).json({ error: 'Failed to create project' });
+  }
+});
+
+// AI endpoints
+app.get('/api/ai/insights', async (req, res) => {
+  try {
+    res.json([]);
+  } catch (error) {
+    console.error('AI insights error:', error);
+    res.status(500).json({ error: 'Failed to fetch AI insights' });
+  }
+});
+
+app.post('/api/ai/chat', async (req, res) => {
+  try {
+    res.json({ message: 'AI chat not implemented yet' });
+  } catch (error) {
+    console.error('AI chat error:', error);
+    res.status(500).json({ error: 'AI chat failed' });
+  }
+});
+
+// Session endpoints
+app.get('/api/sessions/active', async (req, res) => {
+  try {
+    res.json(null);
+  } catch (error) {
+    console.error('Active session error:', error);
+    res.status(500).json({ error: 'Failed to fetch active session' });
+  }
+});
+
+app.get('/api/sessions/stats', async (req, res) => {
+  try {
+    res.json({
+      totalSessions: 0,
+      totalTime: 0,
+      averageSession: 0,
+      productivity: 0
+    });
+  } catch (error) {
+    console.error('Session stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch session stats' });
+  }
+});
+
+app.post('/api/sessions/start', async (req, res) => {
+  try {
+    res.json({ message: 'Session start not implemented yet' });
+  } catch (error) {
+    console.error('Start session error:', error);
+    res.status(500).json({ error: 'Failed to start session' });
+  }
+});
+
+// Notes endpoints
+app.get('/api/notes', async (req, res) => {
+  try {
+    res.json([]);
+  } catch (error) {
+    console.error('Notes error:', error);
+    res.status(500).json({ error: 'Failed to fetch notes' });
+  }
+});
+
+app.post('/api/notes', async (req, res) => {
+  try {
+    res.json({ message: 'Note creation not implemented yet' });
+  } catch (error) {
+    console.error('Create note error:', error);
+    res.status(500).json({ error: 'Failed to create note' });
+  }
+});
+
+app.get('/api/notes/:noteId', async (req, res) => {
+  try {
+    res.status(404).json({ error: 'Note not found' });
+  } catch (error) {
+    console.error('Get note error:', error);
+    res.status(500).json({ error: 'Failed to fetch note' });
+  }
+});
+
+// GitHub endpoints
+app.get('/api/github/status', async (req, res) => {
+  try {
+    res.json({ connected: false });
+  } catch (error) {
+    console.error('GitHub status error:', error);
+    res.status(500).json({ error: 'Failed to get GitHub status' });
+  }
+});
+
+// User endpoints
+app.get('/api/users/search', async (req, res) => {
+  try {
+    res.json([]);
+  } catch (error) {
+    console.error('User search error:', error);
+    res.status(500).json({ error: 'User search failed' });
+  }
+});
+
+app.get('/api/users/profile/:username', async (req, res) => {
+  try {
+    res.status(404).json({ error: 'User not found' });
+  } catch (error) {
+    console.error('Get user profile error:', error);
+    res.status(500).json({ error: 'Failed to fetch user profile' });
+  }
+});
+
+// Team endpoints
+app.get('/api/team/invitations/pending', async (req, res) => {
+  try {
+    res.json([]);
+  } catch (error) {
+    console.error('Pending invitations error:', error);
+    res.status(500).json({ error: 'Failed to fetch pending invitations' });
+  }
+});
+
+app.get('/api/team/colleagues', async (req, res) => {
+  try {
+    res.json([]);
+  } catch (error) {
+    console.error('Colleagues error:', error);
+    res.status(500).json({ error: 'Failed to fetch colleagues' });
+  }
+});
+
+app.get('/api/team/projects/:projectId/members', async (req, res) => {
+  try {
+    res.json([]);
+  } catch (error) {
+    console.error('Project members error:', error);
+    res.status(500).json({ error: 'Failed to fetch project members' });
+  }
+});
+
+app.get('/api/team/projects/:projectId/can-invite/:email', async (req, res) => {
+  try {
+    res.json({ canInvite: true });
+  } catch (error) {
+    console.error('Can invite error:', error);
+    res.status(500).json({ error: 'Failed to check invite status' });
+  }
+});
+
+// Notification mark as read
+app.put('/api/notifications/:notificationId/read', async (req, res) => {
+  try {
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Mark notification read error:', error);
+    res.status(500).json({ error: 'Failed to mark notification as read' });
+  }
+});
+
+app.put('/api/notifications/read-all', async (req, res) => {
+  try {
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Mark all notifications read error:', error);
+    res.status(500).json({ error: 'Failed to mark all notifications as read' });
+  }
+});
+
 app.post('/api/auth/register', async (req, res) => {
   try {
     const bcrypt = require('bcryptjs');

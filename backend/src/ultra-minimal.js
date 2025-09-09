@@ -17,7 +17,17 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.use(cors({ origin: true, credentials: true }));
+// CORS setup
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://valex-delta.vercel.app',
+  'https://valex-frontend.vercel.app'
+];
+
+app.use(cors({ 
+  origin: allowedOrigins,
+  credentials: true 
+}));
 app.use(express.json());
 
 // Log all requests
@@ -38,6 +48,23 @@ app.get('/health', (req, res) => {
 
 app.get('/', (req, res) => {
   res.json({ message: 'Server is running', health: '/health', register: '/api/auth/register' });
+});
+
+// Basic projects endpoint
+app.get('/api/projects', async (req, res) => {
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    
+    // For now, return empty array since we need auth middleware
+    const projects = [];
+    
+    await prisma.$disconnect();
+    res.json(projects);
+  } catch (error) {
+    console.error('Projects error:', error);
+    res.status(500).json({ error: 'Failed to fetch projects' });
+  }
 });
 
 app.post('/api/auth/register', async (req, res) => {

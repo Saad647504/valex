@@ -125,13 +125,37 @@ app.get('/api/notifications', async (req, res) => {
 // Analytics endpoints
 app.get('/api/analytics/user/:userId', async (req, res) => {
   try {
-    // Return empty analytics
+    // Return proper analytics structure
     res.json({
-      totalTasks: 0,
-      completedTasks: 0,
-      totalTimeSpent: 0,
-      productivity: 0,
-      recentActivity: []
+      userInfo: {
+        name: "User",
+        email: "user@example.com", 
+        memberSince: new Date().toISOString(),
+        totalProjects: 0
+      },
+      taskMetrics: {
+        total: 0,
+        completed: 0,
+        inProgress: 0,
+        todo: 0,
+        completionRate: 0,
+        averageCompletionTime: 0
+      },
+      productivityData: [],
+      projectContributions: [],
+      priorityDistribution: [
+        { priority: "LOW", count: 0 },
+        { priority: "MEDIUM", count: 0 },
+        { priority: "HIGH", count: 0 },
+        { priority: "URGENT", count: 0 }
+      ],
+      dailyActivity: [],
+      insights: [
+        {
+          type: "info",
+          message: "Welcome to your analytics dashboard! Start creating projects and tasks to see your productivity insights."
+        }
+      ]
     });
   } catch (error) {
     console.error('Analytics error:', error);
@@ -383,6 +407,106 @@ app.put('/api/notifications/read-all', async (req, res) => {
   } catch (error) {
     console.error('Mark all notifications read error:', error);
     res.status(500).json({ error: 'Failed to mark all notifications as read' });
+  }
+});
+
+// Auth me endpoint - another critical missing endpoint
+app.get('/api/auth/me', async (req, res) => {
+  try {
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const jwt = require('jsonwebtoken');
+    const { PrismaClient } = require('@prisma/client');
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    const prisma = new PrismaClient();
+    
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        avatar: true,
+        isActive: true,
+        createdAt: true
+      }
+    });
+    
+    if (!user) {
+      await prisma.$disconnect();
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    await prisma.$disconnect();
+    res.json(user);
+  } catch (error) {
+    console.error('Get auth me error:', error);
+    res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+// Login endpoint - CRITICAL MISSING ENDPOINT
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const bcrypt = require('bcryptjs');
+    const jwt = require('jsonwebtoken');
+    const { PrismaClient } = require('@prisma/client');
+    
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+    
+    const prisma = new PrismaClient();
+    
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+    
+    if (!user) {
+      await prisma.$disconnect();
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    
+    if (!isValidPassword) {
+      await prisma.$disconnect();
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'fallback-secret');
+    await prisma.$disconnect();
+    
+    res.json({
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      },
+      token
+    });
+    
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      error: 'Login failed',
+      details: error?.message || 'Unknown error'
+    });
   }
 });
 

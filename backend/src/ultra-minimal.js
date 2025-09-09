@@ -5,10 +5,10 @@ const PORT = process.env.PORT || 5001;
 
 // Temporary hardcoded env vars for Railway debugging
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://postgres:Saadbachaoui6475@db.tlkwyhbbunlhdhyqadmt.supabase.co:5432/postgres';
+  process.env.DATABASE_URL = 'postgresql://postgres.tlkwyhbbunlhdhyqadmt:Saadbachaoui6475@aws-1-ca-central-1.pooler.supabase.com:6543/postgres';
   process.env.JWT_SECRET = 'railway-valex-jwt-secret-2024-super-secure-key-abc123';
   process.env.NODE_ENV = 'production';
-  console.log('Using hardcoded environment variables (Railway env vars not working)');
+  console.log('Using hardcoded environment variables with Supabase Transaction pooler');
 }
 
 // Error handling middleware

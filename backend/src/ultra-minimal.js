@@ -85,18 +85,34 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('- PORT:', PORT);
   console.log('- DATABASE_URL exists:', !!process.env.DATABASE_URL);
   
-  // Run migrations after server starts
+  // Test database connection and run migrations
   if (process.env.DATABASE_URL) {
-    console.log('Running database migrations...');
-    const { exec } = require('child_process');
-    exec('npx prisma migrate deploy && npx prisma generate', (error, stdout, stderr) => {
-      if (error) {
-        console.error('Migration error:', error);
-      } else {
-        console.log('Migrations completed successfully');
-        console.log(stdout);
+    console.log('Testing database connection...');
+    setTimeout(async () => {
+      try {
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        await prisma.$queryRaw`SELECT 1 as test`;
+        console.log('Database connection successful!');
+        await prisma.$disconnect();
+        
+        // Now run migrations
+        console.log('Running database migrations...');
+        const { exec } = require('child_process');
+        exec('npx prisma migrate deploy && npx prisma generate', (error, stdout, stderr) => {
+          if (error) {
+            console.error('Migration error:', error);
+            console.log('Server will continue without migrations - registration may fail');
+          } else {
+            console.log('Migrations completed successfully');
+            console.log(stdout);
+          }
+        });
+      } catch (dbError) {
+        console.error('Database connection failed:', dbError);
+        console.log('Server will continue without database - registration will fail');
       }
-    });
+    }, 2000);
   }
 });
 

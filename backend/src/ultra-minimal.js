@@ -97,7 +97,14 @@ app.post('/api/auth/register', async (req, res) => {
     
     res.json({ 
       message: 'Registration successful', 
-      user: { id: user.id, email: user.email },
+      user: { 
+        id: user.id, 
+        email: user.email,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      },
       token 
     });
     

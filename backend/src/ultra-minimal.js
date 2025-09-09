@@ -53,6 +53,6 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Ultra minimal server on port ${PORT}`);
 });

@@ -69,6 +69,24 @@ app.get('/api/db-test', async (req, res) => {
   }
 });
 
+// Debug: check Role enum state and defaults (safe to remove after fix)
+app.get('/api/debug/role-enum', async (req, res) => {
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    const enumValues = await prisma.$queryRawUnsafe(
+      `SELECT enumlabel as value FROM pg_enum e JOIN pg_type t ON t.oid = e.enumtypid WHERE t.typname = 'Role' ORDER BY enumsortorder`
+    );
+    const defaultRow = await prisma.$queryRawUnsafe(
+      `SELECT column_default FROM information_schema.columns WHERE table_schema='public' AND table_name='users' AND column_name='role'`
+    );
+    await prisma.$disconnect();
+    res.json({ enum: enumValues, default: defaultRow });
+  } catch (e: any) {
+    res.status(500).json({ error: 'enum check failed', message: e?.message || 'unknown' });
+  }
+});
+
 // Auth helpers
 async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);

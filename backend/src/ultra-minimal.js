@@ -3,13 +3,8 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Temporary hardcoded env vars for Railway debugging
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://postgres.tlkwyhbbunlhdhyqadmt:Saadbachaoui6475@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?connection_limit=1&pool_timeout=20';
-  process.env.JWT_SECRET = 'railway-valex-jwt-secret-2024-super-secure-key-abc123';
-  process.env.NODE_ENV = 'production';
-  console.log('Using hardcoded environment variables with Supabase Direct connection + connection limits');
-}
+// Environment variables should now be set via Railway dashboard
+console.log('Using Railway environment variables');
 
 // Error handling middleware
 app.use((err, req, res, next) => {

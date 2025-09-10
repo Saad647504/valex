@@ -55,7 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (response.ok) {
             const data = await response.json();
-            setUser(data.user);
+            console.log('🔑 Auth me response:', data);
+            // The /api/auth/me endpoint returns the user directly, not wrapped
+            setUser(data);
           } else {
             // Token is invalid, clear it
             setAuthToken(null);

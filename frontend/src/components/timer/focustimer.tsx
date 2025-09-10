@@ -17,7 +17,7 @@ const josefinSans = Josefin_Sans({ subsets: ['latin'] });
 
 
 interface FocusTimerProps {
-  onBack: () => void;
+  onBack?: () => void;
   onNavigate?: (view: string) => void;
   projectId?: string;
 }
@@ -75,7 +75,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
 
     // From project selection, exit completely
     console.log('🔙 Exiting focus timer');
-    onBack();
+    onBack?.();
   };
   
   const { user } = useAuth();
@@ -105,11 +105,11 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
   useEffect(() => {
     // Debug removed
     // If we're showing project selection and we have projects now, make sure selection stays visible
-    if (showProjectSelection && projects.length > 0 && !projectId) {
+    if (showProjectSelection && projects?.length || 0 > 0 && !projectId) {
       console.log('🎯 Projects loaded, keeping selection screen visible');
       // Keep selection screen visible - user needs to choose
     }
-  }, [projects.length, showProjectSelection, projectId]);
+  }, [projects?.length || 0, showProjectSelection, projectId]);
   
   // Get real tasks from current project that are assigned to current user
   const projectTasks = currentProject?.columns?.flatMap(column => 
@@ -157,11 +157,11 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
     setShowTimerView(false);
   };
 
-  const handleTaskSelect = (task: Task) => {
+  const handleTaskSelect = (task: any) => {
     
     
     // Check if this task is actually running
-    const isTaskRunning = selectedTask && selectedTask.id === task.id && (state === 'running' || state === 'paused' || state === 'overtime');
+    const isTaskRunning = selectedTask && selectedTask?.id === task.id && (state === 'running' || state === 'paused' || state === 'overtime');
     
     if (isTaskRunning) {
       // If this task is running, just show the timer view
@@ -260,11 +260,11 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
       // Create a session note using the notes API
       const { notesAPI } = await import('@/lib/api');
       await notesAPI.createNote({
-        title: `Focus Session: ${selectedTask.title}`,
+        title: `Focus Session: ${selectedTask?.title}`,
         content: `Session Note (${Math.floor(actualTimeSpent / 60)}:${String(actualTimeSpent % 60).padStart(2, '0')}):\n\n${sessionNote}`,
         color: '#0891b2',
-        tags: ['focus-session', 'productivity', selectedTask.projectName.toLowerCase().replace(/\s+/g, '-')],
-        projectId: selectedTask.projectId
+        tags: ['focus-session', 'productivity', selectedTask?.projectName.toLowerCase().replace(/\s+/g, '-')],
+        projectId: selectedTask?.projectId
       });
       
     } catch (error) {
@@ -290,7 +290,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
     }
     
     // Show task completion UI first
-    setCompletedTaskName(selectedTask.title);
+    setCompletedTaskName(selectedTask?.title);
     setShowTaskComplete(true);
     
     try {
@@ -298,7 +298,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
       await markDone();
       
       // Show success notification
-      success('Task Completed! 🎉', `"${selectedTask.title}" has been marked as done and moved to your Kanban board`);
+      success('Task Completed! 🎉', `"${selectedTask?.title}" has been marked as done and moved to your Kanban board`);
       
       // Hide completion UI and return to task selection after delay
       setTimeout(() => {
@@ -341,7 +341,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
   };
 
   const progress = selectedTask ? 
-    Math.min((actualTimeSpent / (selectedTask.estimatedMinutes * 60)) * 100, 100) : 0;
+    Math.min((actualTimeSpent / (selectedTask?.estimatedMinutes * 60)) * 100, 100) : 0;
 
   const getPriorityIndicator = (priority: string) => {
     switch (priority) {
@@ -380,7 +380,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
             <div className="flex items-center gap-3">
               {onNavigate && currentProject && (
                 <button
-                  onClick={() => onNavigate('kanban', currentProject.id)}
+                  onClick={() => onNavigate?.('kanban')}
                   className="flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-700/50 text-sm"
                 >
                   View Board
@@ -410,7 +410,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
                   if (onNavigate) {
                     onNavigate('login');
                   } else if (onBack) {
-                    onBack();
+                    onBack?.();
                   }
                 }}
                 className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-lg font-light hover:from-cyan-600 hover:to-blue-700 transition-all duration-200"
@@ -497,7 +497,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
                   <div className="animate-spin w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full mx-auto mb-4"></div>
                   <span className="text-slate-400">Loading projects...</span>
                 </div>
-              ) : projects.length === 0 ? (
+              ) : projects?.length || 0 === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📋</div>
                   <div className="text-slate-300 font-light text-lg mb-2">No projects yet</div>
@@ -582,7 +582,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
                       if (onNavigate) {
                         onNavigate('projects');
                       } else if (onBack) {
-                        onBack();
+                        onBack?.();
                       } else {
                         window.location.href = '/';
                       }
@@ -602,7 +602,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
                 </div>
               ) : (
                 activeTasks.map((task) => {
-                  const isRunning = selectedTask && selectedTask.id === task.id && (state === 'running' || state === 'paused' || state === 'overtime');
+                  const isRunning = selectedTask && selectedTask?.id === task.id && (state === 'running' || state === 'paused' || state === 'overtime');
                   return (
                 <motion.button
                   key={task.id}
@@ -657,16 +657,16 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
                 {/* Task Header */}
                 <div className="text-center mb-12">
                   <div className="flex items-center justify-center gap-2 mb-3">
-                    <div className={`w-2 h-2 rounded-full ${getPriorityIndicator(selectedTask.priority)}`} />
+                    <div className={`w-2 h-2 rounded-full ${getPriorityIndicator(selectedTask?.priority || 'low')}`} />
                     <span className="text-sm font-light text-slate-400 uppercase tracking-wide">
-                      {selectedTask.projectName}
+                      {selectedTask?.projectName}
                     </span>
                   </div>
                   <h2 className="text-xl font-light text-white mb-2">
-                    {selectedTask.title}
+                    {selectedTask?.title}
                   </h2>
                   <p className="text-sm text-slate-300">
-                    {selectedTask.estimatedMinutes} minute estimate
+                    {selectedTask?.estimatedMinutes} minute estimate
                   </p>
                 </div>
 
@@ -785,7 +785,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-slate-400">Estimated</span>
                     <span className="text-sm font-light text-white">
-                      {selectedTask.estimatedMinutes}m
+                      {selectedTask?.estimatedMinutes}m
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -798,7 +798,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
                     <span className="text-sm text-slate-400">Efficiency</span>
                     <span className={`text-sm font-light ${getEfficiencyColor()}`}>
                       {actualTimeSpent > 0 ? 
-                        Math.round((selectedTask.estimatedMinutes * 60 / actualTimeSpent) * 100) + '%' : 
+                        Math.round(((selectedTask?.estimatedMinutes || 25) * 60 / actualTimeSpent) * 100) + '%' : 
                         '100%'
                       }
                     </span>

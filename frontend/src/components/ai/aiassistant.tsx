@@ -203,7 +203,7 @@ export default function AIAssistant({ onBack }: AIAssistantProps) {
     try {
       const projectsResponse = await projectAPI.getProjects();
       const projects = projectsResponse.projects || [];
-      const totalTasks = projects.reduce((sum, p) => sum + (p.tasks?.length || 0), 0);
+      const totalTasks = projects.reduce((sum: number, p: any) => sum + (p.tasks?.length || 0), 0);
       // Focus session stats (7d)
       const statsResp = await sessionAPI.getStats('7d');
       const stats = statsResp.stats || {};
@@ -239,8 +239,8 @@ export default function AIAssistant({ onBack }: AIAssistantProps) {
           email: user?.email
         },
         projects: {
-          count: projects.length,
-          list: projects.map(p => ({
+          count: projects?.length || 0,
+          list: projects.map((p: any) => ({
             name: p.name,
             key: p.key,
             taskCount: p.tasks?.length || 0,
@@ -468,7 +468,8 @@ export default function AIAssistant({ onBack }: AIAssistantProps) {
       console.error('Failed to generate AI suggestions:', error);
       
       // Adaptive fallback suggestions based on user's activity level
-      const isNewUser = context.projects.count === 0 || context.totalTasks === 0;
+      const userContext = await getUserFullContext();
+      const isNewUser = userContext.projects?.count === 0 || userContext.totalTasks === 0;
       
       if (isNewUser) {
         // Beginner suggestions
@@ -745,7 +746,7 @@ export default function AIAssistant({ onBack }: AIAssistantProps) {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-slate-400">Projects</span>
-                      <span className="text-sm text-emerald-400 font-light">{projects.length}</span>
+                      <span className="text-sm text-emerald-400 font-light">{projects?.length || 0}</span>
                     </div>
                   </div>
                 ) : (
@@ -802,7 +803,7 @@ export default function AIAssistant({ onBack }: AIAssistantProps) {
         {activeView === 'suggestions' && (
           <div className="space-y-6">
             {/* Target Project Selector */}
-            {projects.length > 0 && (
+            {projects?.length || 0 > 0 && (
               <div className="flex items-center justify-end">
                 <div className="flex items-center gap-2 bg-slate-800/40 border border-slate-700/40 rounded-md px-3 py-2">
                   <span className="text-xs text-slate-400">Create in:</span>
@@ -861,7 +862,7 @@ export default function AIAssistant({ onBack }: AIAssistantProps) {
                     </p>
                     {/* Show target project to avoid confusion */}
                     <div className="text-xs text-slate-500 mb-3">
-                      {projects.length > 0 && (
+                      {projects?.length || 0 > 0 && (
                         <>
                           Project:
                           <span className="ml-1 text-slate-300">

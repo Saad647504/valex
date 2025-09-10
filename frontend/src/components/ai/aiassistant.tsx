@@ -56,7 +56,7 @@ export default function AIAssistant({ onBack }: AIAssistantProps) {
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  const [suggestionTargetProjectId, setSuggestionTargetProjectId] = useState<string | undefined>(currentProject?.id || projects[0]?.id);
+  const [suggestionTargetProjectId, setSuggestionTargetProjectId] = useState<string | undefined>(currentProject?.id || projects?.[0]?.id);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -161,7 +161,7 @@ export default function AIAssistant({ onBack }: AIAssistantProps) {
       }
 
       // Find target column: prefer default, else first
-      const defaultCol = columns.find(c => (c as any).isDefault) || columns[0];
+      const defaultCol = columns.find(c => (c as any).isDefault) || columns?.[0];
       if (!defaultCol) {
         notifyError('No Columns Found', 'Open the project board to create a column first.');
         return;
@@ -209,7 +209,7 @@ export default function AIAssistant({ onBack }: AIAssistantProps) {
       const stats = statsResp.stats || {};
 
       // Working project snapshot
-      const workingProjectId = suggestionTargetProjectId || currentProject?.id || projects[0]?.id;
+      const workingProjectId = suggestionTargetProjectId || currentProject?.id || projects?.[0]?.id;
       let workingProject: any = null;
       if (workingProjectId) {
         try {

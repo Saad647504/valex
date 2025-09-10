@@ -314,7 +314,7 @@ app.post('/api/projects', async (req, res) => {
         description: description || '',
         key,
         color: color || '#3B82F6',
-        userId,
+        ownerId: userId,
         columns: {
           create: [
             { name: 'To Do', position: 0, color: '#64748B' },
@@ -328,7 +328,8 @@ app.post('/api/projects', async (req, res) => {
           include: {
             tasks: true
           }
-        }
+        },
+        owner: true
       }
     });
     

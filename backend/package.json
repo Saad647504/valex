@@ -7,7 +7,7 @@
       "dev": "nodemon src/production-server.ts",
       "build": "tsc",
       "start": "node dist/production-server.js",
-      "postinstall": "prisma generate",
+      "postinstall": "echo 'Skipping prisma generate to avoid migration issues'",
       "migrate:deploy": "prisma migrate deploy",
       "db:migrate": "prisma migrate dev",
       "db:generate": "prisma generate",

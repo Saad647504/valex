@@ -303,7 +303,57 @@ app.post('/api/tasks', async (req, res) => {
 // Project endpoints
 app.get('/api/projects/:projectId', async (req, res) => {
   try {
-    res.status(404).json({ error: 'Project not found' });
+    const jwt = require('jsonwebtoken');
+    
+    // Extract token and verify user
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { projectId } = req.params;
+    
+    // Fetch project with full details
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        ownerId: userId // Ensure user owns the project
+      },
+      include: {
+        columns: {
+          include: {
+            tasks: {
+              include: {
+                assignee: true,
+                project: true
+              },
+              orderBy: {
+                position: 'asc'
+              }
+            }
+          },
+          orderBy: {
+            position: 'asc'
+          }
+        },
+        owner: true,
+        members: {
+          include: {
+            user: true
+          }
+        }
+      }
+    });
+    
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    res.json({ project });
   } catch (error) {
     console.error('Get project error:', error);
     res.status(500).json({ error: 'Failed to fetch project' });

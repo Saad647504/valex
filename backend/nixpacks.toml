@@ -5,7 +5,7 @@ nixPkgs = ["nodejs", "npm"]
 cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["npx prisma generate"]
+cmds = ["echo 'Skipping prisma generate for now'"]
 
 [start]
 cmd = "node src/ultra-minimal.js"

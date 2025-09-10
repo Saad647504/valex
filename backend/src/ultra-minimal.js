@@ -21,7 +21,8 @@ app.use((err, req, res, next) => {
 const allowedOrigins = [
   'http://localhost:3000',
   'https://valex-delta.vercel.app',
-  'https://valex-frontend.vercel.app'
+  'https://valex-frontend.vercel.app',
+  'https://valex-git-main-saabachaoui-1974s-projects.vercel.app'
 ];
 
 app.use(cors({ 

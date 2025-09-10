@@ -7,7 +7,7 @@
       "dev": "nodemon src/production-server.ts",
       "build": "tsc",
       "start": "node dist/production-server.js",
-      "postinstall": "echo 'No postinstall needed'",
+      "postinstall": "prisma generate",
       "migrate:deploy": "prisma migrate deploy",
       "db:migrate": "prisma migrate dev",
       "db:generate": "prisma generate",

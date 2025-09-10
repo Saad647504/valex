@@ -12,15 +12,17 @@ COPY prisma/ ./prisma/
 # Install dependencies  
 RUN npm ci
 
-# Deploy migrations to empty database and generate client
-RUN npx prisma migrate deploy
-RUN npx prisma generate
-
 # Copy source code
 COPY src/ ./src/
 
 # Expose port
 EXPOSE 8080
 
-# Start the server
-CMD ["node", "src/ultra-minimal.js"]
+# Create a startup script that runs migrations then starts the server
+RUN echo '#!/bin/bash\n\
+npx prisma migrate deploy\n\
+npx prisma generate\n\
+node src/ultra-minimal.js' > start.sh && chmod +x start.sh
+
+# Start with the script
+CMD ["./start.sh"]

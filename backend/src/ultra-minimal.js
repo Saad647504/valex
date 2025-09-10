@@ -264,6 +264,23 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 });
 
+app.post('/api/ai/suggest-tasks', async (req, res) => {
+  try {
+    // Return sample suggestions for now
+    const suggestions = [
+      "Implement user authentication with JWT tokens",
+      "Add password reset functionality",
+      "Create project search and filtering",
+      "Set up automated testing pipeline",
+      "Implement real-time notifications"
+    ];
+    res.json({ suggestions });
+  } catch (error) {
+    console.error('AI suggest tasks error:', error);
+    res.status(500).json({ error: 'Failed to generate task suggestions' });
+  }
+});
+
 // Session endpoints
 app.get('/api/sessions/active', async (req, res) => {
   try {

@@ -767,7 +767,7 @@ export default function AIAssistant({ onBack }: AIAssistantProps) {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {insights.map((insight, index) => (
+                {(insights || []).map((insight, index) => (
               <div key={index} className="glass-card-minimal p-6 hover:bg-slate-800/30 transition-all">
                 <div className="flex items-start justify-between mb-4">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
@@ -843,7 +843,7 @@ export default function AIAssistant({ onBack }: AIAssistantProps) {
 
             {suggestions.length > 0 && !loadingSuggestions && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {suggestions.map((suggestion, index) => (
+                {(suggestions || []).map((suggestion, index) => (
                   <div key={index} className="glass-card-minimal p-6 hover:bg-slate-800/30 transition-all group">
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">

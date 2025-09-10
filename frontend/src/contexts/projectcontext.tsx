@@ -145,12 +145,12 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const response = await projectAPI.getProjects();
       console.log('📂 Projects API response:', response);
       console.log('📂 Number of projects:', response.projects?.length || 0);
-      setProjects(response.projects);
+      setProjects(response.projects || []);
       setHasInitialized(true);
       
       // Auto-select first project if none is currently selected
-      if (response.projects.length > 0 && !currentProject) {
-        const firstProject = response.projects[0];
+      if ((response.projects || []).length > 0 && !currentProject) {
+        const firstProject = (response.projects || [])[0];
         setCurrentProject(firstProject);
         // Load the full project details
         const projectResponse = await projectAPI.getProject(firstProject.id);

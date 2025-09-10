@@ -55,14 +55,49 @@ app.get('/', (req, res) => {
 // Basic projects endpoint
 app.get('/api/projects', async (req, res) => {
   try {
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
+    const jwt = require('jsonwebtoken');
     
-    // For now, return empty array since we need auth middleware
-    const projects = [];
+    // Extract token and verify user
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
     
-    await prisma.$disconnect();
-    res.json(projects);
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    // Fetch projects owned by the user
+    const projects = await prisma.project.findMany({
+      where: {
+        ownerId: userId
+      },
+      include: {
+        columns: {
+          include: {
+            tasks: {
+              include: {
+                assignee: true
+              }
+            }
+          },
+          orderBy: {
+            position: 'asc'
+          }
+        },
+        owner: true,
+        members: {
+          include: {
+            user: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    
+    res.json({ projects });
   } catch (error) {
     console.error('Projects error:', error);
     res.status(500).json({ error: 'Failed to fetch projects' });

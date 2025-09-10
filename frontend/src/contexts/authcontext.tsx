@@ -45,7 +45,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Try to fetch user data with the saved token
       const fetchUserData = async () => {
         try {
-          const response = await fetch('/api/auth/me', {
+          const API_BASE = process.env.NEXT_PUBLIC_API_BASE || '/api';
+          const response = await fetch(`${API_BASE}/api/auth/me`, {
             headers: {
               'Authorization': `Bearer ${savedToken}`,
               'Content-Type': 'application/json',

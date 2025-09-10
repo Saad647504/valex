@@ -1,10 +1,13 @@
 const express = require('express');
 const cors = require('cors');
+const { PrismaClient } = require('@prisma/client');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Skip Prisma for now to get server running
-console.log('Server starting without Prisma to bypass migration issues');
+// Initialize Prisma client
+const prisma = new PrismaClient();
+
+console.log('Server starting with Prisma client initialized');
 
 // Environment variables should now be set via Railway dashboard
 console.log('Using Railway environment variables');

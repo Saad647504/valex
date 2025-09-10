@@ -209,7 +209,53 @@ app.get('/api/tasks', async (req, res) => {
 
 app.post('/api/tasks', async (req, res) => {
   try {
-    res.json({ message: 'Task creation not implemented yet' });
+    const jwt = require('jsonwebtoken');
+    
+    // Extract token and verify user
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { title, description, priority, columnId, projectId, estimatedMinutes } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ error: 'Task title is required' });
+    }
+    
+    if (!columnId) {
+      return res.status(400).json({ error: 'Column ID is required' });
+    }
+    
+    // Generate task key
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    const key = project ? `${project.key}-${Math.floor(Math.random() * 1000)}` : `TASK-${Math.floor(Math.random() * 1000)}`;
+    
+    const task = await prisma.task.create({
+      data: {
+        title,
+        description: description || '',
+        key,
+        priority: priority || 'medium',
+        status: 'todo',
+        position: 0,
+        estimatedMinutes: estimatedMinutes || null,
+        columnId,
+        projectId,
+        assigneeId: userId
+      },
+      include: {
+        assignee: true,
+        project: true,
+        column: true
+      }
+    });
+    
+    res.json({ task });
   } catch (error) {
     console.error('Create task error:', error);
     res.status(500).json({ error: 'Failed to create task' });
@@ -237,7 +283,53 @@ app.get('/api/projects/key/:projectKey', async (req, res) => {
 
 app.post('/api/projects', async (req, res) => {
   try {
-    res.json({ message: 'Project creation not implemented yet' });
+    const bcrypt = require('bcryptjs');
+    const jwt = require('jsonwebtoken');
+    
+    // Extract token and verify user
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { name, description, color } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'Project name is required' });
+    }
+    
+    // Create project key from name
+    const key = name.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 4) || 'PROJ';
+    
+    const project = await prisma.project.create({
+      data: {
+        name,
+        description: description || '',
+        key,
+        color: color || '#3B82F6',
+        userId,
+        columns: {
+          create: [
+            { name: 'To Do', position: 0, color: '#64748B' },
+            { name: 'In Progress', position: 1, color: '#F59E0B' },
+            { name: 'Done', position: 2, color: '#10B981' }
+          ]
+        }
+      },
+      include: {
+        columns: {
+          include: {
+            tasks: true
+          }
+        }
+      }
+    });
+    
+    res.json({ project });
   } catch (error) {
     console.error('Create project error:', error);
     res.status(500).json({ error: 'Failed to create project' });
@@ -325,7 +417,35 @@ app.get('/api/notes', async (req, res) => {
 
 app.post('/api/notes', async (req, res) => {
   try {
-    res.json({ message: 'Note creation not implemented yet' });
+    const jwt = require('jsonwebtoken');
+    
+    // Extract token and verify user
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { title, content, color, projectId } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ error: 'Note title is required' });
+    }
+    
+    const note = await prisma.note.create({
+      data: {
+        title,
+        content: content || '',
+        color: color || '#FEF3C7',
+        userId,
+        projectId: projectId || null
+      }
+    });
+    
+    res.json({ note });
   } catch (error) {
     console.error('Create note error:', error);
     res.status(500).json({ error: 'Failed to create note' });

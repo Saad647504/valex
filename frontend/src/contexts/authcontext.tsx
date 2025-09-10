@@ -65,12 +65,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('Error fetching user data:', error);
           setAuthToken(null);
           setToken(null);
+        } finally {
+          setLoading(false);
         }
       };
       
       fetchUserData();
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {

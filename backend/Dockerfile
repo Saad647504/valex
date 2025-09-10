@@ -1,25 +1,18 @@
-FROM node:18-alpine
+FROM node:18-slim
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY prisma ./prisma/
 
-# Install dependencies
-RUN npm install
+# Install dependencies (skip postinstall)
+RUN npm ci --ignore-scripts
 
 # Copy source code
-COPY . .
-
-# Generate Prisma client
-RUN npx prisma generate
-
-# Build TypeScript
-RUN npm run build
+COPY src/ ./src/
 
 # Expose port
-EXPOSE 5001
+EXPOSE 8080
 
 # Start the server
-CMD ["npm", "start"]
+CMD ["node", "src/ultra-minimal.js"]

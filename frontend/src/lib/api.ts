@@ -138,21 +138,21 @@ export const authAPI = {
 export const projectAPI = {
   getProjects: () => apiRequest('/api/projects'),
   
-  getProject: (projectId: string) => apiRequest(`/projects/${projectId}`),
+  getProject: (projectId: string) => apiRequest(`/api/projects/${projectId}`),
   
-  getProjectByKey: (projectKey: string) => apiRequest(`/projects/key/${projectKey}`),
+  getProjectByKey: (projectKey: string) => apiRequest(`/api/projects/key/${projectKey}`),
   
   createProject: (projectData: {
     name: string;
     description?: string;
     key: string;
     color?: string;
-  }) => apiRequest('/projects', {
+  }) => apiRequest('/api/projects', {
     method: 'POST',
     body: JSON.stringify(projectData),
   }),
 
-  deleteProject: (projectId: string) => apiRequest(`/projects/${projectId}`, {
+  deleteProject: (projectId: string) => apiRequest(`/api/projects/${projectId}`, {
     method: 'DELETE',
   }),
 };
@@ -168,12 +168,12 @@ export const taskAPI = {
     priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
     estimatedMinutes?: number;
     useAI?: boolean;
-  }) => apiRequest('/tasks', {
+  }) => apiRequest('/api/tasks', {
     method: 'POST',
     body: JSON.stringify(taskData),
   }),
 
-  updateTask: (taskId: string, taskData: any) => apiRequest(`/tasks/${taskId}`, {
+  updateTask: (taskId: string, taskData: any) => apiRequest(`/api/tasks/${taskId}`, {
     method: 'PATCH',
     body: JSON.stringify(taskData),
   }),
@@ -182,15 +182,15 @@ export const taskAPI = {
     columnId: string;
     position: number;
     fromColumn: string;
-  }) => apiRequest(`/tasks/${taskId}/move`, {
+  }) => apiRequest(`/api/tasks/${taskId}/move`, {
     method: 'PATCH',
     body: JSON.stringify(moveData),
   }),
-  autoAssign: (taskId: string) => apiRequest(`/tasks/${taskId}/auto-assign`, {
+  autoAssign: (taskId: string) => apiRequest(`/api/tasks/${taskId}/auto-assign`, {
     method: 'POST'
   }),
 
-  deleteTask: (taskId: string) => apiRequest(`/tasks/${taskId}`, {
+  deleteTask: (taskId: string) => apiRequest(`/api/tasks/${taskId}`, {
     method: 'DELETE',
   }),
 };
@@ -198,15 +198,15 @@ export const taskAPI = {
 // Analytics APIs
 export const analyticsAPI = {
   getProjectAnalytics: (projectKey: string) => 
-    apiRequest(`/analytics/project/key/${projectKey}`),
+    apiRequest(`/api/analytics/project/key/${projectKey}`),
     
   getPersonalAnalytics: (userId: string) =>
-    apiRequest(`/analytics/user/${userId}`),
+    apiRequest(`/api/analytics/user/${userId}`),
 };
 
 // Search APIs
 export const searchAPI = {
-  search: (query: string, filters?: any) => apiRequest('/search', {
+  search: (query: string, filters?: any) => apiRequest('/api/search', {
     method: 'POST',
     body: JSON.stringify({ query, ...filters }),
   }),
@@ -216,7 +216,7 @@ export const searchAPI = {
     filters?: any;
     page?: number;
     limit?: number;
-  }) => apiRequest('/search/tasks', {
+  }) => apiRequest('/api/search/tasks', {
     method: 'POST',
     body: JSON.stringify(body),
   }),
@@ -224,22 +224,22 @@ export const searchAPI = {
 
 // AI APIs
 export const aiAPI = {
-  chat: (message: string, context?: any) => apiRequest('/ai/chat', {
+  chat: (message: string, context?: any) => apiRequest('/api/ai/chat', {
     method: 'POST',
     body: JSON.stringify({ message, context }),
   }),
 
-  analyzeTask: (title: string, description: string, projectId: string) => apiRequest('/ai/analyze-task', {
+  analyzeTask: (title: string, description: string, projectId: string) => apiRequest('/api/ai/analyze-task', {
     method: 'POST',
     body: JSON.stringify({ title, description, projectId }),
   }),
 
-  suggestTasks: (projectContext: string) => apiRequest('/ai/suggest-tasks', {
+  suggestTasks: (projectContext: string) => apiRequest('/api/ai/suggest-tasks', {
     method: 'POST',
     body: JSON.stringify({ projectContext }),
   }),
 
-  getInsights: () => apiRequest('/ai/insights'),
+  getInsights: () => apiRequest('/api/ai/insights'),
 };
 
 // Session APIs
@@ -249,7 +249,7 @@ export const sessionAPI = {
     projectId?: string;
     taskId?: string;
     sessionType?: 'FOCUS' | 'BREAK';
-  }) => apiRequest('/sessions/start', {
+  }) => apiRequest('/api/sessions/start', {
     method: 'POST',
     body: JSON.stringify(sessionData),
   }),
@@ -257,20 +257,20 @@ export const sessionAPI = {
   completeSession: (sessionId: string, data: {
     actualDuration?: number;
     notes?: string;
-  }) => apiRequest(`/sessions/${sessionId}/complete`, {
+  }) => apiRequest(`/api/sessions/${sessionId}/complete`, {
     method: 'POST',
     body: JSON.stringify(data),
   }),
 
-  pauseSession: (sessionId: string) => apiRequest(`/sessions/${sessionId}/pause`, {
+  pauseSession: (sessionId: string) => apiRequest(`/api/sessions/${sessionId}/pause`, {
     method: 'POST',
   }),
 
-  getStats: (period?: '1d' | '7d' | '30d') => apiRequest('/sessions/stats', {
+  getStats: (period?: '1d' | '7d' | '30d') => apiRequest('/api/sessions/stats', {
     method: 'GET',
   }),
 
-  getActiveSession: () => apiRequest('/sessions/active'),
+  getActiveSession: () => apiRequest('/api/sessions/active'),
 };
 
 // Notes APIs
@@ -280,7 +280,7 @@ export const notesAPI = {
     if (search) params.append('search', search);
     if (tag) params.append('tag', tag);
     const queryString = params.toString();
-    return apiRequest(`/notes${queryString ? `?${queryString}` : ''}`);
+    return apiRequest(`/api/notes${queryString ? `?${queryString}` : ''}`);
   },
 
   createNote: (noteData: {
@@ -289,7 +289,7 @@ export const notesAPI = {
     color?: string;
     tags?: string[];
     projectId?: string;
-  }) => apiRequest('/notes', {
+  }) => apiRequest('/api/notes', {
     method: 'POST',
     body: JSON.stringify(noteData),
   }),
@@ -300,31 +300,31 @@ export const notesAPI = {
     color?: string;
     tags?: string[];
     projectId?: string;
-  }) => apiRequest(`/notes/${noteId}`, {
+  }) => apiRequest(`/api/notes/${noteId}`, {
     method: 'PUT',
     body: JSON.stringify(noteData),
   }),
 
-  deleteNote: (noteId: string) => apiRequest(`/notes/${noteId}`, {
+  deleteNote: (noteId: string) => apiRequest(`/api/notes/${noteId}`, {
     method: 'DELETE',
   }),
 
-  getNote: (noteId: string) => apiRequest(`/notes/${noteId}`),
+  getNote: (noteId: string) => apiRequest(`/api/notes/${noteId}`),
 };
 
 // GitHub APIs
 export const githubAPI = {
-  getStatus: () => apiRequest('/github/status'),
+  getStatus: () => apiRequest('/api/github/status'),
 };
 
 
 // User APIs
 export const userAPI = {
-  searchUsers: (query: string) => apiRequest(`/users/search?q=${encodeURIComponent(query)}`),
+  searchUsers: (query: string) => apiRequest(`/api/users/search?q=${encodeURIComponent(query)}`),
 
-  getUserProfile: (username: string) => apiRequest(`/users/profile/${username}`),
+  getUserProfile: (username: string) => apiRequest(`/api/users/profile/${username}`),
 
-  getCurrentUser: () => apiRequest('/users/me'),
+  getCurrentUser: () => apiRequest('/api/users/me'),
 
   updateProfile: (profileData: {
     firstName?: string;
@@ -332,7 +332,7 @@ export const userAPI = {
     username?: string;
     email?: string;
     avatar?: string;
-  }) => apiRequest('/users/profile', {
+  }) => apiRequest('/api/users/profile', {
     method: 'PUT',
     body: JSON.stringify(profileData),
   }),
@@ -340,7 +340,7 @@ export const userAPI = {
   updatePassword: (passwordData: {
     currentPassword: string;
     newPassword: string;
-  }) => apiRequest('/users/password', {
+  }) => apiRequest('/api/users/password', {
     method: 'PUT',
     body: JSON.stringify(passwordData),
   }),
@@ -348,7 +348,7 @@ export const userAPI = {
   inviteUserToProject: (projectId: string, userData: {
     userId: string;
     role?: 'MEMBER' | 'ADMIN' | 'VIEWER';
-  }) => apiRequest(`/team/projects/${projectId}/invite-user`, {
+  }) => apiRequest(`/api/team/projects/${projectId}/invite-user`, {
     method: 'POST',
     body: JSON.stringify(userData),
   }),
@@ -356,13 +356,13 @@ export const userAPI = {
 
 // Notifications APIs
 export const notificationsAPI = {
-  getNotifications: (unreadOnly = false, limit = 20) => apiRequest(`/notifications?unreadOnly=${unreadOnly}&limit=${limit}`),
+  getNotifications: (unreadOnly = false, limit = 20) => apiRequest(`/api/notifications?unreadOnly=${unreadOnly}&limit=${limit}`),
   
-  markAsRead: (notificationId: string) => apiRequest(`/notifications/${notificationId}/read`, {
+  markAsRead: (notificationId: string) => apiRequest(`/api/notifications/${notificationId}/read`, {
     method: 'PUT',
   }),
   
-  markAllAsRead: () => apiRequest('/notifications/read-all', {
+  markAllAsRead: () => apiRequest('/api/notifications/read-all', {
     method: 'PUT',
   }),
 };
@@ -373,48 +373,48 @@ export const teamAPI = {
   sendInvitation: (projectId: string, inviteData: {
     email: string;
     role?: 'MEMBER' | 'ADMIN' | 'VIEWER';
-  }) => apiRequest(`/team/projects/${projectId}/invite`, {
+  }) => apiRequest(`/api/team/projects/${projectId}/invite`, {
     method: 'POST',
     body: JSON.stringify(inviteData),
   }),
 
   // Get project members
-  getMembers: (projectId: string) => apiRequest(`/team/projects/${projectId}/members`),
+  getMembers: (projectId: string) => apiRequest(`/api/team/projects/${projectId}/members`),
 
   // Remove member from project
-  removeMember: (projectId: string, memberId: string) => apiRequest(`/team/projects/${projectId}/members/${memberId}`, {
+  removeMember: (projectId: string, memberId: string) => apiRequest(`/api/team/projects/${projectId}/members/${memberId}`, {
     method: 'DELETE',
   }),
 
   // Update member role
-  updateMemberRole: (projectId: string, memberId: string, role: string) => apiRequest(`/team/projects/${projectId}/members/${memberId}/role`, {
+  updateMemberRole: (projectId: string, memberId: string, role: string) => apiRequest(`/api/team/projects/${projectId}/members/${memberId}/role`, {
     method: 'PATCH',
     body: JSON.stringify({ role }),
   }),
 
   // Get pending invitations for current user
-  getPendingInvitations: () => apiRequest('/team/invitations/pending'),
+  getPendingInvitations: () => apiRequest('/api/team/invitations/pending'),
 
   // Accept invitation
-  acceptInvitation: (token: string) => apiRequest(`/team/invitations/${token}/accept`, {
+  acceptInvitation: (token: string) => apiRequest(`/api/team/invitations/${token}/accept`, {
     method: 'POST',
   }),
 
   // Decline invitation
-  declineInvitation: (token: string) => apiRequest(`/team/invitations/${token}/decline`, {
+  declineInvitation: (token: string) => apiRequest(`/api/team/invitations/${token}/decline`, {
     method: 'POST',
   }),
 
   // Get user's colleagues
-  getColleagues: () => apiRequest('/team/colleagues'),
+  getColleagues: () => apiRequest('/api/team/colleagues'),
 
   // Remove colleague relationship
-  removeColleague: (colleagueId: string) => apiRequest(`/team/colleagues/${colleagueId}`, {
+  removeColleague: (colleagueId: string) => apiRequest(`/api/team/colleagues/${colleagueId}`, {
     method: 'DELETE',
   }),
 
   // Check if invitation can be sent
-  canInvite: (projectId: string, email: string) => apiRequest(`/team/projects/${projectId}/can-invite/${encodeURIComponent(email)}`),
+  canInvite: (projectId: string, email: string) => apiRequest(`/api/team/projects/${projectId}/can-invite/${encodeURIComponent(email)}`),
 };
 
 export default {

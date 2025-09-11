@@ -1137,7 +1137,40 @@ Format as a simple list.`;
 // Session endpoints
 app.get('/api/sessions/active', async (req, res) => {
   try {
-    res.json(null);
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+
+    const session = await prisma.focusSession.findFirst({
+      where: {
+        userId,
+        status: { in: ['ACTIVE', 'PAUSED'] }
+      },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            key: true
+          }
+        },
+        task: {
+          select: {
+            id: true,
+            title: true,
+            key: true
+          }
+        }
+      }
+    });
+
+    res.json({ session });
   } catch (error) {
     console.error('Active session error:', error);
     res.status(500).json({ error: 'Failed to fetch active session' });

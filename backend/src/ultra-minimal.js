@@ -856,6 +856,244 @@ app.put('/api/projects/:projectId', async (req, res) => {
   }
 });
 
+// Task move endpoint for drag & drop
+app.patch('/api/tasks/:id/move', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { id } = req.params;
+    const { columnId, position, fromColumn } = req.body;
+
+    if (!columnId || position === undefined) {
+      return res.status(400).json({ error: 'columnId and position are required' });
+    }
+
+    // Verify user has access to this task
+    const existingTask = await prisma.task.findFirst({
+      where: {
+        id,
+        project: {
+          OR: [
+            { ownerId: userId },
+            { members: { some: { userId } } }
+          ]
+        }
+      },
+      include: {
+        project: true,
+        column: true
+      }
+    });
+
+    if (!existingTask) {
+      return res.status(404).json({ error: 'Task not found or access denied' });
+    }
+
+    // Get target column to determine status
+    const targetColumn = await prisma.column.findUnique({
+      where: { id: columnId }
+    });
+
+    if (!targetColumn) {
+      return res.status(404).json({ error: 'Target column not found' });
+    }
+
+    // Determine new status based on column name
+    let newStatus = existingTask.status;
+    const columnName = targetColumn.name.toLowerCase();
+    
+    if (columnName.includes('progress') || columnName.includes('doing') || 
+        columnName.includes('active') || columnName.includes('working') || 
+        columnName.includes('wip')) {
+      newStatus = 'IN_PROGRESS';
+    } else if (columnName.includes('done') || columnName.includes('complete') || 
+               columnName.includes('finished') || columnName.includes('closed')) {
+      newStatus = 'DONE';
+    } else if (columnName.includes('todo') || columnName.includes('backlog') || 
+               columnName.includes('queue') || columnName.includes('planned')) {
+      newStatus = 'TODO';
+    }
+
+    // Update task with new column, position, and status
+    const updatedTask = await prisma.task.update({
+      where: { id },
+      data: {
+        columnId,
+        position,
+        status: newStatus,
+        ...(newStatus === 'DONE' && { completedAt: new Date() }),
+        ...(newStatus !== 'DONE' && existingTask.completedAt && { completedAt: null })
+      },
+      include: {
+        assignee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+            key: true
+          }
+        },
+        column: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    res.json({ 
+      task: updatedTask,
+      message: 'Task moved successfully'
+    });
+
+  } catch (error) {
+    console.error('Move task error:', error);
+    res.status(500).json({ error: 'Failed to move task' });
+  }
+});
+
+// Auto-assign endpoint for AI task assignment
+app.post('/api/tasks/:id/auto-assign', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { id } = req.params;
+
+    // Verify user has access to this task
+    const task = await prisma.task.findFirst({
+      where: {
+        id,
+        project: {
+          OR: [
+            { ownerId: userId },
+            { members: { some: { userId } } }
+          ]
+        }
+      },
+      include: {
+        project: {
+          include: {
+            members: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found or access denied' });
+    }
+
+    // Simple auto-assignment logic - assign to least loaded team member
+    const projectMembers = task.project.members || [];
+    const allMembers = [
+      { user: { id: task.project.ownerId } }, // Include project owner
+      ...projectMembers
+    ];
+
+    if (allMembers.length === 0) {
+      return res.status(400).json({ error: 'No team members available for assignment' });
+    }
+
+    // Get task counts for each member
+    const memberWorkloads = await Promise.all(
+      allMembers.map(async (member) => {
+        const taskCount = await prisma.task.count({
+          where: {
+            assigneeId: member.user.id,
+            status: { in: ['TODO', 'IN_PROGRESS'] },
+            projectId: task.projectId
+          }
+        });
+        return {
+          userId: member.user.id,
+          taskCount
+        };
+      })
+    );
+
+    // Find member with least tasks
+    const leastLoadedMember = memberWorkloads.reduce((min, current) => 
+      current.taskCount < min.taskCount ? current : min
+    );
+
+    // Update task assignment
+    const updatedTask = await prisma.task.update({
+      where: { id },
+      data: { assigneeId: leastLoadedMember.userId },
+      include: {
+        assignee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.json({ 
+      task: updatedTask,
+      message: `Task auto-assigned to ${updatedTask.assignee?.firstName || 'team member'}`
+    });
+
+  } catch (error) {
+    console.error('Auto-assign task error:', error);
+    res.status(500).json({ error: 'Failed to auto-assign task' });
+  }
+});
+
 // AI endpoints
 app.get('/api/ai/insights', async (req, res) => {
   try {

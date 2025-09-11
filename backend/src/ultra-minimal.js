@@ -238,7 +238,61 @@ app.post('/api/search/tasks', async (req, res) => {
 // Task endpoints
 app.get('/api/tasks', async (req, res) => {
   try {
-    res.json([]);
+    const jwt = require('jsonwebtoken');
+    
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const tasks = await prisma.task.findMany({
+      where: {
+        project: {
+          OR: [
+            { ownerId: userId },
+            { members: { some: { userId } } }
+          ]
+        }
+      },
+      include: {
+        assignee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+            key: true
+          }
+        },
+        column: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    res.json({ tasks });
   } catch (error) {
     console.error('Tasks error:', error);
     res.status(500).json({ error: 'Failed to fetch tasks' });
@@ -249,7 +303,6 @@ app.post('/api/tasks', async (req, res) => {
   try {
     const jwt = require('jsonwebtoken');
     
-    // Extract token and verify user
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'No token provided' });
@@ -259,44 +312,191 @@ app.post('/api/tasks', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.userId;
     
-    const { title, description, priority, columnId, projectId, estimatedMinutes } = req.body;
+    const { title, description, projectId, columnId, assigneeId, priority, estimatedMinutes } = req.body;
     
-    if (!title) {
-      return res.status(400).json({ error: 'Task title is required' });
+    if (!title || !projectId || !columnId) {
+      return res.status(400).json({ error: 'Title, projectId, and columnId are required' });
     }
     
-    if (!columnId) {
-      return res.status(400).json({ error: 'Column ID is required' });
+    // Verify user has access to this project
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        OR: [
+          { ownerId: userId },
+          { members: { some: { userId } } }
+        ]
+      }
+    });
+    
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
     }
     
-    // Generate task key
-    const project = await prisma.project.findUnique({ where: { id: projectId } });
-    const key = project ? `${project.key}-${Math.floor(Math.random() * 1000)}` : `TASK-${Math.floor(Math.random() * 1000)}`;
+    // Generate unique task key
+    let taskNumber = 1;
+    let taskKey = `${project.key}-${taskNumber}`;
+    
+    while (await prisma.task.findUnique({ where: { key: taskKey } })) {
+      taskNumber++;
+      taskKey = `${project.key}-${taskNumber}`;
+    }
+    
+    // Get next position in column
+    const lastTask = await prisma.task.findFirst({
+      where: { columnId },
+      orderBy: { position: 'desc' }
+    });
+    const position = lastTask ? lastTask.position + 1.0 : 1.0;
     
     const task = await prisma.task.create({
       data: {
         title,
-        description: description || '',
-        key,
-        priority: priority || 'medium',
-        status: 'todo',
-        position: 0,
-        estimatedMinutes: estimatedMinutes || null,
-        columnId,
+        description,
+        key: taskKey,
+        priority: priority || 'MEDIUM',
+        position,
         projectId,
-        assigneeId: userId
+        columnId,
+        assigneeId: assigneeId,
+        creatorId: userId,
+        estimatedMinutes
       },
       include: {
-        assignee: true,
-        project: true,
-        column: true
+        assignee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
       }
     });
     
-    res.json({ task });
+    res.status(201).json({ 
+      task, 
+      message: 'Task created successfully' 
+    });
+    
   } catch (error) {
     console.error('Create task error:', error);
     res.status(500).json({ error: 'Failed to create task' });
+  }
+});
+
+// Update task
+app.patch('/api/tasks/:id', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { id } = req.params;
+    const { title, description, columnId, position, status, priority, assigneeId } = req.body;
+
+    const existingTask = await prisma.task.findFirst({
+      where: {
+        id,
+        project: {
+          OR: [
+            { ownerId: userId },
+            { members: { some: { userId } } }
+          ]
+        }
+      }
+    });
+
+    if (!existingTask) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const task = await prisma.task.update({
+      where: { id },
+      data: {
+        ...(title && { title }),
+        ...(description !== undefined && { description }),
+        ...(columnId && { columnId }),
+        ...(position !== undefined && { position }),
+        ...(status && { status }),
+        ...(priority && { priority }),
+        ...(assigneeId !== undefined && { assigneeId }),
+        ...(status === 'DONE' && { completedAt: new Date() })
+      },
+      include: {
+        assignee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.json({ task, message: 'Task updated successfully' });
+
+  } catch (error) {
+    console.error('Update task error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete task
+app.delete('/api/tasks/:id', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { id } = req.params;
+
+    const existingTask = await prisma.task.findFirst({
+      where: {
+        id,
+        project: {
+          OR: [
+            { ownerId: userId },
+            { members: { some: { userId } } }
+          ]
+        }
+      }
+    });
+
+    if (!existingTask) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    await prisma.task.delete({
+      where: { id }
+    });
+
+    res.json({ message: 'Task deleted successfully' });
+
+  } catch (error) {
+    console.error('Delete task error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -98,39 +98,15 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const loadingRef = useRef(false);
   const projectLoadingRef = useRef<string | null>(null);
   const { token } = useAuth();
-  // Add WebSocket integration - temporarily disabled due to CORS issues
-  // const { joinProject, leaveProject, onTaskCreated, onTaskMoved } = useSocket();
-
-  // Listen for real-time task updates - temporarily disabled
-  /*
-  useEffect(() => {
-    const unsubscribeTaskCreated = onTaskCreated((data) => {
-      if (currentProject && currentProject.id === data.task.projectId) {
-        // Refresh the current project to show new task
-        loadProject(currentProject.id);
-      }
-    });
-
-    const unsubscribeTaskMoved = onTaskMoved((data) => {
-      if (currentProject && currentProject.id === data.task.projectId) {
-        // Refresh the current project to show moved task
-        loadProject(currentProject.id);
-      }
-    });
-
-    return () => {
-      unsubscribeTaskCreated();
-      unsubscribeTaskMoved();
-    };
-  }, [currentProject?.id]);
+  // Add WebSocket integration - now enabled with CORS fixed
+  const { joinProject, leaveProject, onTaskCreated, onTaskMoved } = useSocket();
 
   // Join project room when viewing a project
   useEffect(() => {
     if (currentProject) {
       joinProject(currentProject.id);
     }
-  }, [currentProject?.id]);
-  */
+  }, [currentProject?.id, joinProject]);
 
   const loadProjects = useCallback(async () => {
     const now = Date.now();
@@ -241,6 +217,30 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       loadProjects();
     }
   }, [token, hasInitialized, loading, loadProjects]); // Only load if not initialized
+
+  // Listen for real-time task updates - now enabled
+  useEffect(() => {
+    if (!currentProject) return;
+
+    const unsubscribeTaskCreated = onTaskCreated((data) => {
+      if (currentProject && currentProject.id === data.task.projectId) {
+        console.log('📡 Real-time: Task created, refreshing project');
+        loadProject(currentProject.id);
+      }
+    });
+
+    const unsubscribeTaskMoved = onTaskMoved((data) => {
+      if (currentProject && currentProject.id === data.task.projectId) {
+        console.log('📡 Real-time: Task moved, refreshing project');
+        loadProject(currentProject.id);
+      }
+    });
+
+    return () => {
+      unsubscribeTaskCreated();
+      unsubscribeTaskMoved();
+    };
+  }, [currentProject?.id, onTaskCreated, onTaskMoved, loadProject]);
 
   return (
     <ProjectContext.Provider value={{

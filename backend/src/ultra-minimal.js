@@ -1,7 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+
 const app = express();
+const server = createServer(app);
 const PORT = process.env.PORT || 8080;
 
 // Initialize Prisma client
@@ -30,7 +34,58 @@ app.use(cors({
   origin: allowedOrigins,
   credentials: true 
 }));
+
+// Initialize Socket.IO with CORS
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
 app.use(express.json());
+
+// WebSocket authentication and room management
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error('No token provided'));
+  }
+  
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.userId = decoded.userId;
+    next();
+  } catch (error) {
+    next(new Error('Invalid token'));
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log(`User ${socket.userId} connected via WebSocket`);
+  
+  // Join project room
+  socket.on('join-project', (projectId) => {
+    socket.join(`project:${projectId}`);
+    console.log(`User ${socket.userId} joined project ${projectId}`);
+  });
+  
+  // Leave project room
+  socket.on('leave-project', (projectId) => {
+    socket.leave(`project:${projectId}`);
+    console.log(`User ${socket.userId} left project ${projectId}`);
+  });
+  
+  socket.on('disconnect', () => {
+    console.log(`User ${socket.userId} disconnected from WebSocket`);
+  });
+});
+
+// Helper function to emit real-time updates
+const emitToProject = (projectId, event, data) => {
+  io.to(`project:${projectId}`).emit(event, data);
+};
 
 // Log all requests
 app.use((req, res, next) => {
@@ -390,6 +445,9 @@ app.post('/api/tasks', async (req, res) => {
         }
       }
     });
+    
+    // Emit real-time task creation event
+    emitToProject(projectId, 'task-created', { task });
     
     res.status(201).json({ 
       task, 
@@ -965,6 +1023,13 @@ app.patch('/api/tasks/:id/move', async (req, res) => {
       }
     });
 
+    // Emit real-time task movement event
+    emitToProject(updatedTask.project.id, 'task-moved', { 
+      task: updatedTask,
+      fromColumn,
+      toColumn: updatedTask.column.id
+    });
+    
     res.json({ 
       task: updatedTask,
       message: 'Task moved successfully'
@@ -2404,7 +2469,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-const server = app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
   const address = server.address();
   console.log(`Ultra minimal server listening on port ${PORT}`);
   console.log('Server address:', address);

@@ -52,6 +52,15 @@ app.get('/', (req, res) => {
   res.json({ message: 'Server is running', health: '/health', register: '/api/auth/register' });
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    service: 'valex-backend'
+  });
+});
+
 // Basic projects endpoint
 app.get('/api/projects', async (req, res) => {
   try {

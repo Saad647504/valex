@@ -1767,6 +1767,194 @@ app.get('/api/team/projects/:projectId/can-invite/:email', async (req, res) => {
   }
 });
 
+app.post('/api/team/invite', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { email, projectId, role = 'MEMBER' } = req.body;
+
+    if (!email || !projectId) {
+      return res.status(400).json({ error: 'Email and project ID are required' });
+    }
+
+    // Check if user owns the project
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        ownerId: userId
+      }
+    });
+
+    if (!project) {
+      return res.status(403).json({ error: 'Only project owners can invite members' });
+    }
+
+    // Check if user exists
+    const invitedUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!invitedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user is already a member
+    const existingMember = await prisma.projectMember.findFirst({
+      where: {
+        projectId,
+        userId: invitedUser.id
+      }
+    });
+
+    if (existingMember) {
+      return res.status(400).json({ error: 'User is already a project member' });
+    }
+
+    // Create project membership
+    const membership = await prisma.projectMember.create({
+      data: {
+        projectId,
+        userId: invitedUser.id,
+        role
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({ 
+      membership,
+      message: 'User added to project successfully' 
+    });
+  } catch (error) {
+    console.error('Team invite error:', error);
+    res.status(500).json({ error: 'Failed to invite user' });
+  }
+});
+
+app.delete('/api/team/projects/:projectId/members/:userId', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const currentUserId = decoded.userId;
+    
+    const { projectId, userId } = req.params;
+
+    // Check if current user owns the project
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        ownerId: currentUserId
+      }
+    });
+
+    if (!project) {
+      return res.status(403).json({ error: 'Only project owners can remove members' });
+    }
+
+    // Don't allow removing the owner
+    if (userId === currentUserId) {
+      return res.status(400).json({ error: 'Cannot remove project owner' });
+    }
+
+    // Remove the membership
+    await prisma.projectMember.deleteMany({
+      where: {
+        projectId,
+        userId
+      }
+    });
+
+    res.json({ message: 'Member removed successfully' });
+  } catch (error) {
+    console.error('Remove member error:', error);
+    res.status(500).json({ error: 'Failed to remove member' });
+  }
+});
+
+app.put('/api/team/projects/:projectId/members/:userId/role', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const currentUserId = decoded.userId;
+    
+    const { projectId, userId } = req.params;
+    const { role } = req.body;
+
+    if (!role || !['MEMBER', 'ADMIN'].includes(role)) {
+      return res.status(400).json({ error: 'Valid role is required (MEMBER or ADMIN)' });
+    }
+
+    // Check if current user owns the project
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        ownerId: currentUserId
+      }
+    });
+
+    if (!project) {
+      return res.status(403).json({ error: 'Only project owners can change member roles' });
+    }
+
+    // Update the member's role
+    const updatedMembership = await prisma.projectMember.update({
+      where: {
+        projectId_userId: {
+          projectId,
+          userId
+        }
+      },
+      data: { role },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.json({ 
+      membership: updatedMembership,
+      message: 'Member role updated successfully' 
+    });
+  } catch (error) {
+    console.error('Update member role error:', error);
+    res.status(500).json({ error: 'Failed to update member role' });
+  }
+});
+
 // Notification mark as read
 app.put('/api/notifications/:notificationId/read', async (req, res) => {
   try {

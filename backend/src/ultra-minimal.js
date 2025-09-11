@@ -1015,7 +1015,59 @@ app.get('/api/github/status', async (req, res) => {
 // User endpoints
 app.get('/api/users/search', async (req, res) => {
   try {
-    res.json([]);
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { q } = req.query;
+
+    if (!q || typeof q !== 'string') {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    const searchTerm = q.trim().toLowerCase();
+
+    if (searchTerm.length < 2) {
+      return res.status(400).json({ error: 'Search term must be at least 2 characters' });
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        AND: [
+          { id: { not: userId } },
+          { isActive: true },
+          {
+            OR: [
+              { username: { contains: searchTerm, mode: 'insensitive' } },
+              { firstName: { contains: searchTerm, mode: 'insensitive' } },
+              { lastName: { contains: searchTerm, mode: 'insensitive' } },
+              { email: { contains: searchTerm, mode: 'insensitive' } }
+            ]
+          }
+        ]
+      },
+      select: {
+        id: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        avatar: true,
+        role: true
+      },
+      take: 20,
+      orderBy: [
+        { username: 'asc' }
+      ]
+    });
+
+    res.json({ users });
   } catch (error) {
     console.error('User search error:', error);
     res.status(500).json({ error: 'User search failed' });

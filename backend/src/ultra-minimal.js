@@ -727,6 +727,126 @@ app.post('/api/projects', async (req, res) => {
   }
 });
 
+app.delete('/api/projects/:projectId', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { projectId } = req.params;
+
+    // Check if user owns the project
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        ownerId: userId
+      }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found or access denied' });
+    }
+
+    // Delete project and all related data (cascade)
+    await prisma.project.delete({
+      where: { id: projectId }
+    });
+
+    res.json({ message: 'Project deleted successfully' });
+  } catch (error) {
+    console.error('Delete project error:', error);
+    res.status(500).json({ error: 'Failed to delete project' });
+  }
+});
+
+app.put('/api/projects/:projectId', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { projectId } = req.params;
+    const { name, description, key } = req.body;
+
+    // Check if user owns the project
+    const existingProject = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        ownerId: userId
+      }
+    });
+
+    if (!existingProject) {
+      return res.status(404).json({ error: 'Project not found or access denied' });
+    }
+
+    // Check if key is unique (if provided and different)
+    if (key && key !== existingProject.key) {
+      const keyExists = await prisma.project.findFirst({
+        where: { 
+          key,
+          id: { not: projectId }
+        }
+      });
+      
+      if (keyExists) {
+        return res.status(400).json({ error: 'Project key already exists' });
+      }
+    }
+
+    const updatedProject = await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        ...(name && { name }),
+        ...(description && { description }),
+        ...(key && { key })
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            }
+          }
+        },
+        columns: {
+          orderBy: { position: 'asc' }
+        }
+      }
+    });
+
+    res.json({ project: updatedProject, message: 'Project updated successfully' });
+  } catch (error) {
+    console.error('Update project error:', error);
+    res.status(500).json({ error: 'Failed to update project' });
+  }
+});
+
 // AI endpoints
 app.get('/api/ai/insights', async (req, res) => {
   try {

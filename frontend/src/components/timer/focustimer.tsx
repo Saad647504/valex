@@ -105,7 +105,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
   useEffect(() => {
     // Debug removed
     // If we're showing project selection and we have projects now, make sure selection stays visible
-    if (showProjectSelection && projects?.length || 0 > 0 && !projectId) {
+    if (showProjectSelection && (projects?.length || 0) > 0 && !projectId) {
       console.log('🎯 Projects loaded, keeping selection screen visible');
       // Keep selection screen visible - user needs to choose
     }
@@ -497,7 +497,7 @@ export default function FocusTimer({ onBack, onNavigate, projectId }: FocusTimer
                   <div className="animate-spin w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full mx-auto mb-4"></div>
                   <span className="text-slate-400">Loading projects...</span>
                 </div>
-              ) : projects?.length || 0 === 0 ? (
+              ) : (projects?.length || 0) === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📋</div>
                   <div className="text-slate-300 font-light text-lg mb-2">No projects yet</div>

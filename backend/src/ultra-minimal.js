@@ -730,7 +730,74 @@ app.post('/api/projects', async (req, res) => {
 // AI endpoints
 app.get('/api/ai/insights', async (req, res) => {
   try {
-    res.json([]);
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+
+    // Get user's tasks for analysis
+    const tasks = await prisma.task.findMany({
+      where: {
+        OR: [
+          { assigneeId: userId },
+          { creatorId: userId }
+        ]
+      },
+      include: {
+        project: { select: { name: true } }
+      }
+    });
+
+    const completedTasks = tasks.filter(t => t.status === 'DONE');
+    const inProgressTasks = tasks.filter(t => t.status === 'IN_PROGRESS');
+    
+    const insights = [];
+    
+    // Generate productivity insights
+    if (tasks.length > 0) {
+      const completionRate = Math.round((completedTasks.length / tasks.length) * 100);
+      
+      if (completionRate >= 80) {
+        insights.push({
+          type: 'success',
+          message: `🎯 Excellent! You've completed ${completionRate}% of your tasks - you're crushing your goals!`,
+          action: 'keep_going'
+        });
+      } else if (completionRate >= 60) {
+        insights.push({
+          type: 'success', 
+          message: `👍 You've completed ${completionRate}% of your tasks - great progress!`,
+          action: 'maintain_pace'
+        });
+      } else if (completionRate < 40) {
+        insights.push({
+          type: 'warning',
+          message: `🎯 You've completed ${completionRate}% of your tasks - consider focusing on fewer tasks to increase completion rate.`,
+          action: 'focus_more'
+        });
+      }
+      
+      if (inProgressTasks.length > 5) {
+        insights.push({
+          type: 'warning',
+          message: `🔄 You have ${inProgressTasks.length} tasks in progress - consider focusing on fewer tasks at once.`,
+          action: 'reduce_wip'
+        });
+      }
+    } else {
+      insights.push({
+        type: 'info',
+        message: '👋 Welcome! Start by creating your first task to see personalized insights.',
+        action: 'create_task'
+      });
+    }
+
+    res.json({ insights });
   } catch (error) {
     console.error('AI insights error:', error);
     res.status(500).json({ error: 'Failed to fetch AI insights' });
@@ -739,7 +806,86 @@ app.get('/api/ai/insights', async (req, res) => {
 
 app.post('/api/ai/chat', async (req, res) => {
   try {
-    res.json({ message: 'AI chat not implemented yet' });
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+
+    const { message } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    // Get user context
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { firstName: true, lastName: true }
+    });
+
+    const tasks = await prisma.task.findMany({
+      where: {
+        OR: [
+          { assigneeId: userId },
+          { creatorId: userId }
+        ]
+      },
+      include: {
+        project: { select: { name: true } }
+      }
+    });
+
+    const projects = await prisma.project.findMany({
+      where: {
+        OR: [
+          { ownerId: userId },
+          { members: { some: { userId } } }
+        ]
+      },
+      select: { name: true, description: true }
+    });
+
+    // Call OpenAI API
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a helpful AI assistant for a task management app called Valex. The user's name is ${user?.firstName || 'User'}. They have ${tasks.length} tasks and ${projects.length} projects. Be helpful, concise, and focus on productivity and task management. Keep responses under 150 words.`
+          },
+          {
+            role: 'user',
+            content: message
+          }
+        ],
+        max_tokens: 150,
+        temperature: 0.7
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('OpenAI API request failed');
+    }
+
+    const data = await response.json();
+    const aiMessage = data.choices[0]?.message?.content || 'Sorry, I could not process your request.';
+
+    res.json({ 
+      message: aiMessage,
+      timestamp: new Date().toISOString()
+    });
+
   } catch (error) {
     console.error('AI chat error:', error);
     res.status(500).json({ error: 'AI chat failed' });
@@ -748,15 +894,111 @@ app.post('/api/ai/chat', async (req, res) => {
 
 app.post('/api/ai/suggest-tasks', async (req, res) => {
   try {
-    // Return sample suggestions for now
-    const suggestions = [
-      "Implement user authentication with JWT tokens",
-      "Add password reset functionality",
-      "Create project search and filtering",
-      "Set up automated testing pipeline",
-      "Implement real-time notifications"
-    ];
-    res.json({ suggestions });
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+
+    const { projectId, context } = req.body;
+
+    // Get user's existing tasks and project context
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { firstName: true, lastName: true }
+    });
+
+    const tasks = await prisma.task.findMany({
+      where: {
+        OR: [
+          { assigneeId: userId },
+          { creatorId: userId }
+        ],
+        ...(projectId && { projectId })
+      },
+      include: {
+        project: { select: { name: true, description: true } }
+      }
+    });
+
+    const project = projectId ? await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { name: true, description: true }
+    }) : null;
+
+    // Build context for AI
+    const taskContext = tasks.map(task => 
+      `${task.title} (${task.status}) - ${task.description || 'No description'}`
+    ).join('\n');
+
+    const prompt = `Based on the following project and tasks, suggest 5 specific, actionable tasks that would help move the project forward:
+
+Project: ${project?.name || 'General tasks'}
+Description: ${project?.description || 'No project description'}
+Context: ${context || 'No additional context'}
+
+Current tasks:
+${taskContext || 'No existing tasks'}
+
+Generate 5 task suggestions that are:
+1. Specific and actionable
+2. Relevant to the project context
+3. Not duplicating existing tasks
+4. Varied in scope (mix of quick wins and bigger items)
+
+Format as a simple list.`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 300,
+        temperature: 0.8
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('OpenAI API request failed');
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices[0]?.message?.content || '';
+    
+    // Parse the response into individual suggestions
+    const suggestions = aiResponse
+      .split('\n')
+      .filter(line => line.trim() && (line.includes('.') || line.includes('-')))
+      .map(line => line.replace(/^\d+\.\s*|-\s*/, '').trim())
+      .filter(suggestion => suggestion.length > 10)
+      .slice(0, 5);
+
+    // Fallback suggestions if AI fails
+    if (suggestions.length === 0) {
+      const fallbackSuggestions = [
+        "Add password reset functionality",
+        "Create project search and filtering", 
+        "Set up automated testing pipeline",
+        "Implement real-time notifications",
+        "Add task priority system"
+      ];
+      res.json({ suggestions: fallbackSuggestions });
+    } else {
+      res.json({ suggestions });
+    }
   } catch (error) {
     console.error('AI suggest tasks error:', error);
     res.status(500).json({ error: 'Failed to generate task suggestions' });
@@ -789,10 +1031,295 @@ app.get('/api/sessions/stats', async (req, res) => {
 
 app.post('/api/sessions/start', async (req, res) => {
   try {
-    res.json({ message: 'Session start not implemented yet' });
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+
+    const { duration, projectId, taskId, sessionType = 'FOCUS' } = req.body;
+
+    if (!duration) {
+      return res.status(400).json({ error: 'Duration is required' });
+    }
+
+    // End any active sessions first
+    await prisma.focusSession.updateMany({
+      where: {
+        userId,
+        status: 'ACTIVE'
+      },
+      data: {
+        status: 'INTERRUPTED',
+        endedAt: new Date()
+      }
+    });
+
+    const session = await prisma.focusSession.create({
+      data: {
+        userId,
+        projectId,
+        taskId,
+        duration,
+        sessionType,
+        status: 'ACTIVE',
+        startedAt: new Date()
+      },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            key: true
+          }
+        },
+        task: {
+          select: {
+            id: true,
+            title: true,
+            key: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      session,
+      message: 'Focus session started'
+    });
+
   } catch (error) {
     console.error('Start session error:', error);
     res.status(500).json({ error: 'Failed to start session' });
+  }
+});
+
+app.post('/api/sessions/:id/complete', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { id } = req.params;
+    const { actualDuration, notes } = req.body;
+
+    const session = await prisma.focusSession.findFirst({
+      where: {
+        id,
+        userId,
+        status: 'ACTIVE'
+      }
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Active session not found' });
+    }
+
+    const updatedSession = await prisma.focusSession.update({
+      where: { id },
+      data: {
+        status: 'COMPLETED',
+        endedAt: new Date(),
+        actualDuration: actualDuration || session.duration,
+        notes
+      },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            key: true
+          }
+        },
+        task: {
+          select: {
+            id: true,
+            title: true,
+            key: true
+          }
+        }
+      }
+    });
+
+    res.json({
+      session: updatedSession,
+      message: 'Session completed successfully'
+    });
+
+  } catch (error) {
+    console.error('Complete session error:', error);
+    res.status(500).json({ error: 'Failed to complete session' });
+  }
+});
+
+app.post('/api/sessions/:id/pause', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { id } = req.params;
+
+    const session = await prisma.focusSession.findFirst({
+      where: {
+        id,
+        userId,
+        status: { in: ['ACTIVE', 'PAUSED'] }
+      }
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const newStatus = session.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+
+    const updatedSession = await prisma.focusSession.update({
+      where: { id },
+      data: { status: newStatus }
+    });
+
+    res.json({
+      session: updatedSession,
+      message: `Session ${newStatus.toLowerCase()}`
+    });
+
+  } catch (error) {
+    console.error('Pause session error:', error);
+    res.status(500).json({ error: 'Failed to update session' });
+  }
+});
+
+app.get('/api/sessions/stats', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { period = '7d' } = req.query;
+
+    let startDate = new Date();
+    switch (period) {
+      case '1d':
+        startDate.setDate(startDate.getDate() - 1);
+        break;
+      case '7d':
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case '30d':
+        startDate.setDate(startDate.getDate() - 30);
+        break;
+      default:
+        startDate.setDate(startDate.getDate() - 7);
+    }
+
+    const sessions = await prisma.focusSession.findMany({
+      where: {
+        userId,
+        startedAt: {
+          gte: startDate
+        },
+        status: { in: ['COMPLETED', 'INTERRUPTED'] }
+      },
+      include: {
+        project: {
+          select: { name: true, key: true }
+        },
+        task: {
+          select: { title: true, key: true }
+        }
+      },
+      orderBy: {
+        startedAt: 'desc'
+      }
+    });
+
+    const calculateStreak = async (userId) => {
+      try {
+        const sessions = await prisma.focusSession.findMany({
+          where: {
+            userId,
+            status: 'COMPLETED'
+          },
+          orderBy: {
+            startedAt: 'desc'
+          },
+          take: 100
+        });
+
+        let streak = 0;
+        const today = new Date().toDateString();
+        let currentDate = today;
+        
+        for (const session of sessions) {
+          const sessionDate = session.startedAt.toDateString();
+          if (sessionDate === currentDate) {
+            if (streak === 0) streak = 1;
+            const prevDate = new Date(currentDate);
+            prevDate.setDate(prevDate.getDate() - 1);
+            currentDate = prevDate.toDateString();
+          } else if (sessionDate === currentDate) {
+            streak++;
+            const prevDate = new Date(currentDate);
+            prevDate.setDate(prevDate.getDate() - 1);
+            currentDate = prevDate.toDateString();
+          } else {
+            break;
+          }
+        }
+
+        return streak;
+      } catch (error) {
+        console.error('Failed to calculate streak:', error);
+        return 0;
+      }
+    };
+
+    const stats = {
+      totalSessions: sessions.length,
+      completedSessions: sessions.filter(s => s.status === 'COMPLETED').length,
+      totalFocusTime: sessions.reduce((total, session) => 
+        total + (session.actualDuration || session.duration), 0
+      ),
+      averageSessionLength: sessions.length > 0 
+        ? Math.round(sessions.reduce((total, session) => 
+            total + (session.actualDuration || session.duration), 0
+          ) / sessions.length)
+        : 0,
+      streak: await calculateStreak(userId),
+      sessionsToday: sessions.filter(s => 
+        s.startedAt.toDateString() === new Date().toDateString()
+      ).length,
+      recentSessions: sessions.slice(0, 10)
+    };
+
+    res.json({ stats });
+
+  } catch (error) {
+    console.error('Get stats error:', error);
+    res.status(500).json({ error: 'Failed to get statistics' });
   }
 });
 

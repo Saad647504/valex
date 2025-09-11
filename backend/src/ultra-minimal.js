@@ -562,19 +562,7 @@ app.get('/api/projects/:projectId', async (req, res) => {
 
 app.get('/api/projects/key/:projectKey', async (req, res) => {
   try {
-    res.status(404).json({ error: 'Project not found' });
-  } catch (error) {
-    console.error('Get project by key error:', error);
-    res.status(500).json({ error: 'Failed to fetch project' });
-  }
-});
-
-app.post('/api/projects', async (req, res) => {
-  try {
-    const bcrypt = require('bcryptjs');
     const jwt = require('jsonwebtoken');
-    
-    // Extract token and verify user
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'No token provided' });
@@ -584,41 +572,155 @@ app.post('/api/projects', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.userId;
     
-    const { name, description, color } = req.body;
+    const { projectKey } = req.params;
+
+    const project = await prisma.project.findFirst({
+      where: {
+        key: projectKey.toUpperCase(),
+        OR: [
+          { ownerId: userId },
+          { 
+            members: {
+              some: { userId }
+            }
+          }
+        ]
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            }
+          }
+        },
+        columns: {
+          orderBy: { position: 'asc' },
+          include: {
+            tasks: {
+              orderBy: { position: 'asc' },
+              include: {
+                assignee: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true
+                  }
+                },
+                creator: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    res.json({ project });
+  } catch (error) {
+    console.error('Get project by key error:', error);
+    res.status(500).json({ error: 'Failed to fetch project' });
+  }
+});
+
+app.post('/api/projects', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
     
-    if (!name) {
-      return res.status(400).json({ error: 'Project name is required' });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
     }
     
-    // Create project key from name
-    const key = name.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 4) || 'PROJ';
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
     
+    const { name, description, key, color } = req.body;
+
+    if (!name || !key) {
+      return res.status(400).json({ error: 'Name and key are required' });
+    }
+
+    // Check if project key already exists
+    const existingProject = await prisma.project.findUnique({
+      where: { key }
+    });
+
+    if (existingProject) {
+      return res.status(400).json({ error: 'Project key already exists' });
+    }
+
     const project = await prisma.project.create({
       data: {
         name,
-        description: description || '',
-        key,
+        description,
+        key: key.toUpperCase(),
         color: color || '#3B82F6',
-        ownerId: userId,
-        columns: {
-          create: [
-            { name: 'To Do', position: 0, color: '#64748B' },
-            { name: 'In Progress', position: 1, color: '#F59E0B' },
-            { name: 'Done', position: 2, color: '#10B981' }
-          ]
-        }
+        ownerId: userId
       },
       include: {
-        columns: {
-          include: {
-            tasks: true
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
           }
-        },
-        owner: true
+        }
       }
     });
-    
-    res.json({ project });
+
+    // Create default columns
+    await prisma.column.createMany({
+      data: [
+        {
+          name: 'To Do',
+          position: 1,
+          color: '#64748B',
+          projectId: project.id
+        },
+        {
+          name: 'In Progress',
+          position: 2,
+          color: '#F59E0B',
+          projectId: project.id
+        },
+        {
+          name: 'Done',
+          position: 3,
+          color: '#10B981',
+          isDefault: true,
+          projectId: project.id
+        }
+      ]
+    });
+
+    res.status(201).json({ project, message: 'Project created successfully' });
   } catch (error) {
     console.error('Create project error:', error);
     res.status(500).json({ error: 'Failed to create project' });

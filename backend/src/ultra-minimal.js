@@ -697,7 +697,33 @@ app.post('/api/sessions/start', async (req, res) => {
 // Notes endpoints
 app.get('/api/notes', async (req, res) => {
   try {
-    res.json([]);
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const notes = await prisma.note.findMany({
+      where: { userId },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            key: true
+          }
+        }
+      },
+      orderBy: { 
+        createdAt: 'desc' 
+      }
+    });
+    
+    res.json(notes);
   } catch (error) {
     console.error('Notes error:', error);
     res.status(500).json({ error: 'Failed to fetch notes' });
@@ -743,10 +769,134 @@ app.post('/api/notes', async (req, res) => {
 
 app.get('/api/notes/:noteId', async (req, res) => {
   try {
-    res.status(404).json({ error: 'Note not found' });
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { noteId } = req.params;
+    
+    const note = await prisma.note.findFirst({
+      where: {
+        id: noteId,
+        userId
+      },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            key: true
+          }
+        }
+      }
+    });
+    
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+    
+    res.json(note);
   } catch (error) {
     console.error('Get note error:', error);
     res.status(500).json({ error: 'Failed to fetch note' });
+  }
+});
+
+// Update note
+app.patch('/api/notes/:noteId', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { noteId } = req.params;
+    const { title, content, color, isPinned, isStarred, tags } = req.body;
+    
+    const existingNote = await prisma.note.findFirst({
+      where: {
+        id: noteId,
+        userId
+      }
+    });
+    
+    if (!existingNote) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+    
+    const note = await prisma.note.update({
+      where: { id: noteId },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(content !== undefined && { content }),
+        ...(color !== undefined && { color }),
+        ...(isPinned !== undefined && { isPinned }),
+        ...(isStarred !== undefined && { isStarred }),
+        ...(tags !== undefined && { tags })
+      },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            key: true
+          }
+        }
+      }
+    });
+    
+    res.json({ note, message: 'Note updated successfully' });
+  } catch (error) {
+    console.error('Update note error:', error);
+    res.status(500).json({ error: 'Failed to update note' });
+  }
+});
+
+// Delete note
+app.delete('/api/notes/:noteId', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+    
+    const { noteId } = req.params;
+    
+    const existingNote = await prisma.note.findFirst({
+      where: {
+        id: noteId,
+        userId
+      }
+    });
+    
+    if (!existingNote) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+    
+    await prisma.note.delete({
+      where: { id: noteId }
+    });
+    
+    res.json({ message: 'Note deleted successfully' });
+  } catch (error) {
+    console.error('Delete note error:', error);
+    res.status(500).json({ error: 'Failed to delete note' });
   }
 });
 

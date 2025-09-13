@@ -3,7 +3,7 @@
 # 🚀 VALEX
 ### *Where Productivity Meets Pure Innovation* ⚡
 
-![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=28&duration=3000&pause=1000&color=6366F1&center=true&vCenter=true&multiline=true&width=800&height=100&lines=Next-Generation+AI-Powered;Task+Management+Platform;🤖+Real-time+%7C+🎨+3D+Interface+%7C+⚡+WebGL)
+![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=28&duration=3000&pause=1000&color=6366F1&center=true&vCenter=true&multiline=true&width=800&height=120&lines=Next-Generation+AI-Powered;Task+Management+Platform;🤖+Real-time+%7C+🎨+3D+Interface+%7C+⚡+WebGL)
 
 ---
 
@@ -391,7 +391,7 @@ Sub-second load times, 60fps animations, <50ms latency. Every millisecond matter
 
 <br/><br/>
 
-![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=20&duration=3000&pause=1000&color=6366F1&center=true&vCenter=true&width=600&lines=University+of+Ottawa+Computer+Engineering;Co-op+Student+•+Winter+2025;Building+the+Future+of+Productivity)
+![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=20&duration=3000&pause=1000&color=6366F1&center=true&vCenter=true&width=600&lines=University+of+Ottawa+Computer+Engineering;Co-op+Student+•+Winter+2026;Building+the+Future+of+Productivity)
 
 ### 🌟 **If this impressed you, smash that star button!** ⭐
 
@@ -404,6 +404,6 @@ Sub-second load times, 60fps animations, <50ms latency. Every millisecond matter
 *"Code is poetry, and this is my symphony."* 🎵
 
 **Built with 💜 and lots of ☕**  
-*© 2025 Saad Bachaoui - University of Ottawa*
+*© 2026 Saad Bachaoui - University of Ottawa*
 
 </div>

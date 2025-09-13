@@ -3,7 +3,7 @@
 # 🚀 VALEX
 ### *Where Productivity Meets Pure Innovation* ⚡
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=28&duration=3000&pause=1000&color=6366F1&center=true&vCenter=true&multiline=true&width=800&height=100&lines=Next-Generation+AI-Powered;Task+Management+Platform;🤖+Real-time+%7C+🎨+3D+Interface+%7C+⚡+WebGL" alt="Typing SVG" />
+![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=28&duration=3000&pause=1000&color=6366F1&center=true&vCenter=true&multiline=true&width=800&height=100&lines=Next-Generation+AI-Powered;Task+Management+Platform;🤖+Real-time+%7C+🎨+3D+Interface+%7C+⚡+WebGL)
 
 ---
 
@@ -369,7 +369,7 @@ Sub-second load times, 60fps animations, <50ms latency. Every millisecond matter
 *Coming soon - recording the best features now*
 
 ### 📱 **Try It Live**
-[🌟 **Valex Web App**](https://valex-delta.vercel.app) • [⚡ **GitHub Repo**](https://github.com/Saad647504/valex) • [💼 **My Portfolio**](https://saad-portfolio.dev)
+[🌟 **Valex Web App**](https://valex-delta.vercel.app) • [⚡ **GitHub Repo**](https://github.com/Saad647504/valex) • [💼 **My Portfolio**](https://saad647504.github.io/my-portfolio/)
 
 </div>
 
@@ -382,16 +382,16 @@ Sub-second load times, 60fps animations, <50ms latency. Every millisecond matter
 <a href="https://linkedin.com/in/saad-bachaoui">
   <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/>
 </a>
-<a href="https://saad-portfolio.dev">
+<a href="https://saad647504.github.io/my-portfolio/">
   <img src="https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge&logo=todoist&logoColor=white" alt="Portfolio"/>
 </a>
-<a href="mailto:saad.bachaoui@uottawa.ca">
+<a href="mailto:sbach081@uottawa.ca">
   <img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email"/>
 </a>
 
 <br/><br/>
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&duration=3000&pause=1000&color=6366F1&center=true&vCenter=true&width=600&lines=University+of+Ottawa+Computer+Engineering;Co-op+Student+•+Winter+2025;Building+the+Future+of+Productivity" alt="Typing SVG" />
+![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=20&duration=3000&pause=1000&color=6366F1&center=true&vCenter=true&width=600&lines=University+of+Ottawa+Computer+Engineering;Co-op+Student+•+Winter+2025;Building+the+Future+of+Productivity)
 
 ### 🌟 **If this impressed you, smash that star button!** ⭐
 

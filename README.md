@@ -3,7 +3,7 @@
 # 🚀 VALEX
 ### *Where Productivity Meets Pure Innovation* ⚡
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=28&duration=3000&pause=1000&color=6366F1&background=00000000&center=true&vCenter=true&multiline=true&width=800&height=100&lines=Next-Generation+AI-Powered;Task+Management+Platform;🤖+Real-time+%7C+🎨+3D+Interface+%7C+⚡+WebGL" alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=28&duration=3000&pause=1000&color=6366F1&center=true&vCenter=true&multiline=true&width=800&height=100&lines=Next-Generation+AI-Powered;Task+Management+Platform;🤖+Real-time+%7C+🎨+3D+Interface+%7C+⚡+WebGL" alt="Typing SVG" />
 
 ---
 
@@ -26,7 +26,7 @@
 
 <br/>
 
-### 🎮 **[LIVE DEMO](https://valex-app.vercel.app)** • 📱 **[MOBILE VIEW](https://valex-app.vercel.app/mobile)** • 🎥 **[VIDEO WALKTHROUGH](https://youtube.com/watch?v=demo)**
+### 🎮 **[LIVE DEMO](https://valex-delta.vercel.app)** • 📱 **[MOBILE OPTIMIZED](https://valex-delta.vercel.app)** • 🚀 **[FULL-STACK WEB APP](https://valex-delta.vercel.app)**
 
 </div>
 
@@ -77,9 +77,9 @@ socket.on('taskUpdate', (data) => {
 
 ## 🎨 **VISUAL SHOWCASE**
 
-<img width="800" alt="Valex Dashboard" src="https://user-images.githubusercontent.com/placeholder/dashboard-preview.gif">
+🎮 **[Try the Live Demo](https://valex-delta.vercel.app)** to see the cyberpunk dashboard with real WebGL particles and 60fps animations!
 
-*↑ Cyberpunk dashboard with real WebGL particles and smooth 60fps animations*
+*Screenshots and demo GIFs coming soon - the live app speaks for itself* 🚀
 
 </div>
 
@@ -295,14 +295,14 @@ NEXT_PUBLIC_SOCKET_URL="http://localhost:5001"
 
 <div align="center">
 
-### 🎮 **Drag & Drop Kanban**
-<img width="600" alt="Kanban Demo" src="https://user-images.githubusercontent.com/placeholder/kanban-demo.gif">
+### 🎮 **Experience It Live**
+**[🚀 Open Valex](https://valex-delta.vercel.app)** and see:
+- Drag & drop kanban boards with physics
+- AI-powered task assignment in action  
+- Real-time collaboration with live cursors
+- Cyberpunk 3D interface with WebGL effects
 
-### 🤖 **AI Task Assignment**
-<img width="600" alt="AI Demo" src="https://user-images.githubusercontent.com/placeholder/ai-assignment.gif">
-
-### ⚡ **Real-Time Collaboration**
-<img width="600" alt="Collaboration Demo" src="https://user-images.githubusercontent.com/placeholder/realtime-demo.gif">
+*Demo videos and GIFs coming soon - but why watch when you can play with it live?*
 
 </div>
 
@@ -366,10 +366,10 @@ Sub-second load times, 60fps animations, <50ms latency. Every millisecond matter
 ## 🎬 **SHOWCASE**
 
 ### 🎥 **Demo Videos**
-[🔥 **Full Walkthrough**](https://youtu.be/demo) • [🤖 **AI Features**](https://youtu.be/ai-demo) • [🎮 **3D Interface**](https://youtu.be/3d-demo)
+*Coming soon - recording the best features now*
 
 ### 📱 **Try It Live**
-[🌟 **Web App**](https://valex-app.vercel.app) • [📱 **Mobile**](https://valex-app.vercel.app/mobile) • [🎯 **API Docs**](https://api.valex-app.com/docs)
+[🌟 **Valex Web App**](https://valex-delta.vercel.app) • [⚡ **GitHub Repo**](https://github.com/Saad647504/valex) • [💼 **My Portfolio**](https://saad-portfolio.dev)
 
 </div>
 
@@ -391,7 +391,7 @@ Sub-second load times, 60fps animations, <50ms latency. Every millisecond matter
 
 <br/><br/>
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&duration=3000&pause=1000&color=6366F1&background=00000000&center=true&vCenter=true&width=600&lines=University+of+Ottawa+Computer+Engineering;Co-op+Student+•+Winter+2025;Building+the+Future+of+Productivity" alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&duration=3000&pause=1000&color=6366F1&center=true&vCenter=true&width=600&lines=University+of+Ottawa+Computer+Engineering;Co-op+Student+•+Winter+2025;Building+the+Future+of+Productivity" alt="Typing SVG" />
 
 ### 🌟 **If this impressed you, smash that star button!** ⭐
 
